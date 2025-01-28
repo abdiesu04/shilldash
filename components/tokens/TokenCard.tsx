@@ -13,9 +13,13 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Sparkles, TrendingUp, TrendingDown, Clock, ChevronRight } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, Clock, ChevronRight, Trash2, Crown, Shield } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { ChartData, ScriptableContext } from 'chart.js';
+import { useSession } from '@clerk/nextjs';
+import type { ReactNode } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { motion } from 'framer-motion';
 
 // Register Chart.js plugins
 ChartJS.register(
@@ -78,7 +82,10 @@ interface TokenCardProps {
       labels: string[];
       prices: number[];
     };
+    clerkUserId?: string;
   };
+  onDelete?: () => void;
+  showDeleteButton?: boolean;
 }
 
 const generateChartData = (basePrice: number, dataPoints: number = 24) => {
@@ -97,7 +104,12 @@ const generateChartData = (basePrice: number, dataPoints: number = 24) => {
   };
 };
 
-export default function TokenCard({ token }: TokenCardProps) {
+export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
+  const { session } = useSession();
+  const { userId } = useAuth();
+  const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
+  const isMyToken = userId && token.clerkUserId === userId;
+
   const [isHovered, setIsHovered] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
@@ -338,6 +350,23 @@ export default function TokenCard({ token }: TokenCardProps) {
     setIsChartLoading(false);
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal from opening
+    if (!canDelete || !onDelete) return;
+
+    try {
+      const response = await fetch(`/api/tokens/${token.contractAddress}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        onDelete();
+      }
+    } catch (error) {
+      console.error('Error deleting token:', error);
+    }
+  };
+
   return (
     <>
       <div
@@ -375,10 +404,20 @@ export default function TokenCard({ token }: TokenCardProps) {
                 </div>
               )}
             </div>
-            <div>
-              <h3 className="font-semibold text-white text-lg group-hover:text-[#03E1FF] transition-colors duration-300">
-                {token.name}
-              </h3>
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-2">
+                <h3 className="font-semibold text-white text-lg group-hover:text-[#03E1FF] transition-colors duration-300">
+                  {token.name}
+                </h3>
+                {isMyToken && (
+                  <div className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20 shadow-[0_0_30px_-15px_rgba(0,255,163,0.3)] group/badge">
+                    <div className="flex items-center space-x-1.5">
+                      <Crown className="w-3.5 h-3.5 text-[#03E1FF]" />
+                      <span className="text-xs font-medium text-[#03E1FF]">Creator</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <p className="text-sm text-gray-400">
                 {token.symbol}
               </p>
@@ -434,30 +473,56 @@ export default function TokenCard({ token }: TokenCardProps) {
         </div>
 
         <div className="mt-4 pt-4 border-t border-[#03E1FF]/10">
-          <p className="text-xs text-gray-500 font-mono truncate group-hover:text-gray-400 transition-colors duration-300">
-            {token.contractAddress}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500 font-mono truncate group-hover:text-gray-400 transition-colors duration-300">
+              {token.contractAddress}
+            </p>
+            {canDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(e);
+                }}
+                className="ml-2 p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+                title="Delete Token"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <Modal
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
-        title={`${token.name} (${token.symbol})`}
+        title={
+          <div className="flex items-center justify-between w-full">
+            <span>{`${token.name} (${token.symbol})`}</span>
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+                title="Delete Token"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        }
         size="lg"
       >
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {token.logo && (
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00FFA3] to-[#03E1FF] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+                <div className="relative">
                   <Image
                     src={token.logo}
                     alt={`${token.name} logo`}
                     width={64}
                     height={64}
-                    className="relative rounded-full ring-2 ring-[#03E1FF]/20 group-hover:ring-[#03E1FF]/40 transition-all duration-500"
+                    className="rounded-full ring-2 ring-[#03E1FF]/20"
                   />
                 </div>
               )}
@@ -487,9 +552,9 @@ export default function TokenCard({ token }: TokenCardProps) {
                 <button
                   key={tf.value}
                   onClick={() => handleTimeframeChange(tf.value)}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-300 ${
                     selectedTimeframe === tf.value
-                      ? 'bg-gradient-to-r from-[#00FFA3]/20 to-[#03E1FF]/20 text-white'
+                      ? 'bg-[#03E1FF]/10 text-[#03E1FF]'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -500,25 +565,19 @@ export default function TokenCard({ token }: TokenCardProps) {
             </div>
           </div>
 
-          {/* Modal Chart */}
+          {/* Chart Container */}
           {chartData && (
-            <div className="relative group">
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-[#00FFA3] to-[#03E1FF] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
-              <div className="relative h-[400px] w-full bg-white/5 backdrop-blur-xl rounded-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 p-6 transition-all duration-500">
+            <div className="relative">
+              <div className="h-[400px] w-full bg-white/5 rounded-xl border border-[#03E1FF]/10 p-6">
                 {isChartLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-[#0A0F1F]/50 backdrop-blur-sm rounded-xl z-10">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full border-2 border-[#03E1FF] border-t-transparent animate-spin" />
-                      <div className="absolute inset-0 rounded-full bg-[#03E1FF]/10 animate-pulse" />
-                    </div>
+                    <div className="w-12 h-12 rounded-full border-2 border-[#03E1FF] border-t-transparent animate-spin" />
                   </div>
                 ) : (
                   <div className="relative h-full">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#0A0F1F]/10 via-transparent to-[#0A0F1F]/10 pointer-events-none" />
                     <Line
                       options={detailChartOptions}
                       data={chartData}
-                      className="transition-all duration-500 group-hover:opacity-90"
                     />
                   </div>
                 )}
@@ -528,28 +587,28 @@ export default function TokenCard({ token }: TokenCardProps) {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="group p-4 rounded-xl bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 hover:border-[#03E1FF]/20 transition-all duration-500">
+              <div className="p-4 rounded-xl bg-white/5 border border-[#03E1FF]/10">
                 <p className="text-sm text-gray-400 mb-1">
                   Market Cap
                 </p>
-                <p className="text-xl font-semibold text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                <p className="text-xl font-semibold text-white">
                   {formatNumber(token.metadata.market_cap)}
                 </p>
               </div>
-              <div className="group p-4 rounded-xl bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 hover:border-[#03E1FF]/20 transition-all duration-500">
+              <div className="p-4 rounded-xl bg-white/5 border border-[#03E1FF]/10">
                 <p className="text-sm text-gray-400 mb-1">
                   24h Volume
                 </p>
-                <p className="text-xl font-semibold text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                <p className="text-xl font-semibold text-white">
                   {formatNumber(token.metadata.volume_24h)}
                 </p>
               </div>
             </div>
-            <div className="group p-4 rounded-xl bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 hover:border-[#03E1FF]/20 transition-all duration-500 h-full">
+            <div className="p-4 rounded-xl bg-white/5 border border-[#03E1FF]/10 h-full">
               <p className="text-sm text-gray-400 mb-2">
                 Contract Address
               </p>
-              <p className="font-mono text-sm text-white group-hover:text-[#03E1FF] break-all transition-colors duration-300">
+              <p className="font-mono text-sm text-white break-all">
                 {token.contractAddress}
               </p>
             </div>

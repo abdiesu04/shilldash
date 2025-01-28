@@ -122,4 +122,34 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { address: string } }
+) {
+  try {
+    await connectToDatabase();
+
+    // Find and delete the token
+    const result = await Token.findOneAndDelete({ contractAddress: params.address });
+
+    if (!result) {
+      return NextResponse.json(
+        { message: 'Token not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: 'Token deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error deleting token:', error);
+    return NextResponse.json(
+      { message: 'Error deleting token' },
+      { status: 500 }
+    );
+  }
 } 
