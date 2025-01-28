@@ -3,11 +3,20 @@ import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
 import axios from 'axios';
+import { mockTokenData } from '@/utils/mockTokenData';
 
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 
 async function getTokenInfo(contractAddress: string) {
   try {
+    // Check if mock data exists for this token
+    if (mockTokenData[contractAddress]) {
+      console.log('Using mock data for token:', contractAddress);
+      return mockTokenData[contractAddress];
+    }
+
+    console.log('No mock data found, fetching from API for token:', contractAddress);
+    
     // Get price and market data
     const priceResponse = await axios.get(
       `https://api.coingecko.com/api/v3/simple/token_price/solana`,
@@ -52,7 +61,17 @@ async function getTokenInfo(contractAddress: string) {
       }
     };
   } catch (error) {
-    console.error('Error fetching token info:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Error fetching token info:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        message: error.message
+      });
+    } else {
+      console.error('Error fetching token info:', error);
+    }
     throw new Error('Failed to fetch token information');
   }
 }
@@ -112,9 +131,21 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error adding token:', error);
+    let errorMessage = 'Unknown error occurred';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      if (axios.isAxiosError(error)) {
+        statusCode = error.response?.status || 500;
+        errorMessage = error.response?.data?.error || error.message;
+      }
+    }
+
     return NextResponse.json({
       message: 'Error adding token',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      error: errorMessage,
+      status: statusCode
+    }, { status: statusCode });
   }
 } 
