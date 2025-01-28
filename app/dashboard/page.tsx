@@ -210,11 +210,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1F] py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0A0F1F] pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Success Message */}
         {successMessage && (
-          <div className="fixed top-4 right-4 flex items-center bg-green-500/10 border border-green-500/20 text-green-500 px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="fixed top-24 right-4 flex items-center bg-green-500/10 border border-green-500/20 text-green-500 px-4 py-2 rounded-lg shadow-lg z-50">
             <CheckCircle2 className="w-5 h-5 mr-2" />
             {successMessage}
           </div>
@@ -223,7 +223,7 @@ export default function Dashboard() {
         {/* Confirmation Dialog */}
         {showConfirmDialog && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[#0A0F1F] border border-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="bg-[#0A0F1F] border border-gray-800 rounded-lg p-6 max-w-md w-full mx-4 mt-16">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="w-6 h-6 text-yellow-500 mr-2" />
                 <h3 className="text-lg font-medium text-white">Confirm Deletion</h3>

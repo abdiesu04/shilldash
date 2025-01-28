@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserButton, useAuth, SignInButton } from '@clerk/nextjs';
-import { Menu, X, Plus, LineChart, Home, Moon, Sun, Wallet, Activity, LogIn, User, Bookmark, Sparkles } from 'lucide-react';
+import { UserButton, useAuth, SignInButton, useClerk } from '@clerk/nextjs';
+import { Menu, X, Plus, LineChart, Home, Moon, Sun, Wallet, Activity, LogIn, User, Bookmark, Sparkles, AlertTriangle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Modal from '../ui/Modal';
 import AddTokenForm from '../tokens/AddTokenForm';
@@ -12,6 +12,7 @@ import AddTokenForm from '../tokens/AddTokenForm';
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuOptionsOpen, setIsMenuOptionsOpen] = useState(false);
   const [showAddToken, setShowAddToken] = useState(false);
@@ -19,6 +20,7 @@ const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const { userId, isLoaded, isSignedIn } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Reset auth error when auth state changes
   useEffect(() => {
@@ -27,10 +29,40 @@ const Navbar = () => {
     }
   }, [isLoaded, isSignedIn]);
 
-  const handleAuthError = () => {
-    setAuthError('Authentication error occurred. Please sign in again.');
-    router.push('/sign-in');
-  };
+  const handleAuthError = useCallback(async (error: any) => {
+    console.error('Authentication error:', error);
+    
+    if (error?.message?.includes('Token refresh failed') || error?.message?.includes('Network error')) {
+      setAuthError('Session expired. Please sign in again.');
+      
+      // If not already retrying, attempt to handle the token refresh error
+      if (!isRetrying) {
+        setIsRetrying(true);
+        try {
+          // Attempt to sign out cleanly
+          await signOut();
+        } catch (signOutError) {
+          console.error('Error during sign out:', signOutError);
+        } finally {
+          setIsRetrying(false);
+          router.push('/');
+        }
+      }
+    } else {
+      setAuthError('Authentication error occurred. Please sign in again.');
+    }
+    
+    setTimeout(() => setAuthError(null), 5000);
+  }, [router, signOut, isRetrying]);
+
+  // Add error boundary for auth operations
+  const withAuthErrorHandling = useCallback(async (operation: () => Promise<void>) => {
+    try {
+      await operation();
+    } catch (error) {
+      handleAuthError(error);
+    }
+  }, [handleAuthError]);
 
   const menuOptions = [
     { id: 'your-tokens', label: 'Your Tokens', icon: User },
@@ -39,12 +71,13 @@ const Navbar = () => {
   ];
 
   const handleMenuOptionSelect = async (optionId: string) => {
-    try {
-      if (!isSignedIn) {
-        router.push('/sign-in');
-        return;
-      }
+    if (!isSignedIn) {
+      setAuthError('Please sign in to access this feature');
+      setTimeout(() => setAuthError(null), 3000);
+      return;
+    }
 
+    await withAuthErrorHandling(async () => {
       switch (optionId) {
         case 'your-tokens':
           router.push('/dashboard?view=my-tokens');
@@ -56,10 +89,7 @@ const Navbar = () => {
           // Implement Shill Vision feature
           break;
       }
-    } catch (error) {
-      console.error('Menu navigation error:', error);
-      handleAuthError();
-    }
+    });
   };
 
   // Handle scroll effect
@@ -74,10 +104,29 @@ const Navbar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Activity },
     { name: 'Market', href: '/', icon: LineChart },
-    { name: 'Portfolio', href: '/portfolio', icon: Wallet },
+    { name: 'Portfolio', href: '/portfolio', icon: Wallet, requiresAuth: true },
   ];
 
   const isActive = (path: string) => pathname === path;
+
+  const handleNavigation = (item: { href: string, requiresAuth?: boolean }) => {
+    if (item.requiresAuth && !isSignedIn) {
+      setAuthError('Please sign in to access this feature');
+      setTimeout(() => setAuthError(null), 3000);
+      return;
+    }
+    router.push(item.href);
+  };
+
+  // Add this new function to handle Add Token click
+  const handleAddTokenClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isSignedIn) {
+      setAuthError(null); // Clear any existing error
+      return; // Let the SignInButton handle the click
+    }
+    setShowAddToken(true);
+  };
 
   return (
     <>
@@ -89,8 +138,18 @@ const Navbar = () => {
         }`}
       >
         {authError && (
-          <div className="absolute top-full left-0 right-0 bg-red-500/10 backdrop-blur-xl border-b border-red-500/20 p-2">
-            <p className="text-sm text-red-500 text-center">{authError}</p>
+          <div className="absolute top-full left-0 right-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 backdrop-blur-xl border-b border-[#03E1FF]/20 p-3">
+            <div className="flex items-center justify-center space-x-2 text-center">
+              <AlertTriangle className="w-4 h-4 text-[#03E1FF]" />
+              <p className="text-sm text-white">
+                {authError}
+                <SignInButton mode="modal">
+                  <button className="ml-2 text-[#03E1FF] hover:text-[#00FFA3] transition-colors duration-300">
+                    Sign in now
+                  </button>
+                </SignInButton>
+              </p>
+            </div>
           </div>
         )}
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -114,6 +173,14 @@ const Navbar = () => {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={(e) => {
+                        if (item.requiresAuth && !isSignedIn) {
+                          e.preventDefault();
+                          setAuthError('Please sign in to access this feature');
+                          setTimeout(() => setAuthError(null), 3000);
+                          return;
+                        }
+                      }}
                       className={`group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                         isActive(item.href)
                           ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-white border border-[#03E1FF]/20'
@@ -139,17 +206,7 @@ const Navbar = () => {
 
             {/* Right side buttons */}
             <div className="flex items-center space-x-4">
-              {userId ? (
-                <button
-                  onClick={() => setShowAddToken(true)}
-                  className="group relative flex items-center px-4 py-2 text-sm font-medium text-white overflow-hidden rounded-lg transition-all duration-300"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
-                  <div className="absolute inset-[1px] bg-[#0A0F1F] rounded-lg group-hover:bg-transparent transition-all duration-300" />
-                  <Plus className="w-4 h-4 mr-2 relative z-10" />
-                  <span className="relative z-10">Add Token</span>
-                </button>
-              ) : (
+              {!isLoaded ? null : !isSignedIn ? (
                 <SignInButton mode="modal">
                   <button className="group relative flex items-center px-4 py-2 text-sm font-medium text-white overflow-hidden rounded-lg transition-all duration-300">
                     <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
@@ -158,6 +215,16 @@ const Navbar = () => {
                     <span className="relative z-10">Sign In</span>
                   </button>
                 </SignInButton>
+              ) : (
+                <button
+                  onClick={handleAddTokenClick}
+                  className="group relative flex items-center px-4 py-2 text-sm font-medium text-white overflow-hidden rounded-lg transition-all duration-300"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
+                  <div className="absolute inset-[1px] bg-[#0A0F1F] rounded-lg group-hover:bg-transparent transition-all duration-300" />
+                  <Plus className="w-4 h-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Add Token</span>
+                </button>
               )}
 
               {/* Three Dots Menu */}
@@ -249,12 +316,20 @@ const Navbar = () => {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={(e) => {
+                        if (item.requiresAuth && !isSignedIn) {
+                          e.preventDefault();
+                          setAuthError('Please sign in to access this feature');
+                          setTimeout(() => setAuthError(null), 3000);
+                          return;
+                        }
+                        setIsMenuOpen(false);
+                      }}
                       className={`group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                         isActive(item.href)
                           ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-white border border-[#03E1FF]/20'
                           : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
-                      onClick={() => setIsMenuOpen(false)}
                     >
                       <Icon className={`w-4 h-4 mr-2 transition-all duration-300 ${
                         isActive(item.href) 
