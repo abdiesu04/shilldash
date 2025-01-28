@@ -8,6 +8,7 @@ import { Menu, X, Plus, LineChart, Home, Moon, Sun, Wallet, Activity, LogIn, Use
 import { useTheme } from 'next-themes';
 import Modal from '../ui/Modal';
 import AddTokenForm from '../tokens/AddTokenForm';
+import SignInDialog from '../ui/SignInDialog';
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -16,6 +17,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuOptionsOpen, setIsMenuOptionsOpen] = useState(false);
   const [showAddToken, setShowAddToken] = useState(false);
+  const [showSignInDialog, setShowSignInDialog] = useState(false);
+  const [signInMessage, setSignInMessage] = useState({ title: '', message: '' });
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
   const { userId, isLoaded, isSignedIn } = useAuth();
@@ -64,20 +67,46 @@ const Navbar = () => {
     }
   }, [handleAuthError]);
 
-  const menuOptions = [
-    { id: 'your-tokens', label: 'Your Tokens', icon: User },
-    { id: 'saved-tokens', label: 'Saved Tokens', icon: Bookmark },
-    { id: 'shill-vision', label: 'Shill Vision', icon: Sparkles },
-  ];
+  const handleProtectedAction = (action: string) => {
+    if (!isSignedIn) {
+      let title = 'Sign In Required';
+      let message = 'Please sign in to access this feature';
+
+      switch (action) {
+        case 'add-token':
+          title = 'Sign In to Add Tokens';
+          message = 'Please sign in to start adding and tracking your tokens';
+          break;
+        case 'portfolio':
+          title = 'Access Your Portfolio';
+          message = 'Sign in to view and manage your token portfolio';
+          break;
+        case 'your-tokens':
+          title = 'View Your Tokens';
+          message = 'Sign in to access your tracked tokens';
+          break;
+        case 'saved-tokens':
+          title = 'Access Saved Tokens';
+          message = 'Sign in to view your saved tokens';
+          break;
+      }
+
+      setSignInMessage({ title, message });
+      setShowSignInDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddTokenClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (handleProtectedAction('add-token')) {
+      setShowAddToken(true);
+    }
+  };
 
   const handleMenuOptionSelect = async (optionId: string) => {
-    if (!isSignedIn) {
-      setAuthError('Please sign in to access this feature');
-      setTimeout(() => setAuthError(null), 3000);
-      return;
-    }
-
-    await withAuthErrorHandling(async () => {
+    if (handleProtectedAction(optionId)) {
       switch (optionId) {
         case 'your-tokens':
           router.push('/dashboard?view=my-tokens');
@@ -89,7 +118,8 @@ const Navbar = () => {
           // Implement Shill Vision feature
           break;
       }
-    });
+    }
+    setIsMenuOptionsOpen(false);
   };
 
   // Handle scroll effect
@@ -110,23 +140,19 @@ const Navbar = () => {
   const isActive = (path: string) => pathname === path;
 
   const handleNavigation = (item: { href: string, requiresAuth?: boolean }) => {
-    if (item.requiresAuth && !isSignedIn) {
-      setAuthError('Please sign in to access this feature');
-      setTimeout(() => setAuthError(null), 3000);
-      return;
+    if (item.requiresAuth) {
+      if (!handleProtectedAction('portfolio')) {
+        return;
+      }
     }
     router.push(item.href);
   };
 
-  // Add this new function to handle Add Token click
-  const handleAddTokenClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isSignedIn) {
-      setAuthError(null); // Clear any existing error
-      return; // Let the SignInButton handle the click
-    }
-    setShowAddToken(true);
-  };
+  const menuOptions = [
+    { id: 'your-tokens', label: 'Your Tokens', icon: User },
+    { id: 'saved-tokens', label: 'Saved Tokens', icon: Bookmark },
+    { id: 'shill-vision', label: 'Shill Vision', icon: Sparkles },
+  ];
 
   return (
     <>
@@ -360,6 +386,16 @@ const Navbar = () => {
       >
         <AddTokenForm onSuccess={() => setShowAddToken(false)} />
       </Modal>
+
+      {/* Sign In Dialog */}
+      {showSignInDialog && (
+        <SignInDialog
+          title={signInMessage.title}
+          message={signInMessage.message}
+          onClose={() => setShowSignInDialog(false)}
+          showHome={false}
+        />
+      )}
     </>
   );
 };
