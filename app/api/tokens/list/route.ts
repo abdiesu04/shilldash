@@ -7,16 +7,32 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
+    const viewMode = searchParams.get('view') || 'all';
     const skip = (page - 1) * limit;
 
     await connectToDatabase();
 
-    const tokens = await Token.find()
-      .sort({ timestamp: -1 })
+    let query = {};
+    let sortOptions = {};
+
+    // If viewing user's tokens, add the clerkId filter
+    if (viewMode === 'my-tokens') {
+      query = { clerkUserId: userId };
+    }
+
+    // Sort by price change for trending view
+    if (viewMode === 'trending' || viewMode === 'all') {
+      sortOptions = { 'metadata.price_change_24h': -1 }; // -1 for descending order
+    } else {
+      sortOptions = { timestamp: -1 };
+    }
+
+    const tokens = await Token.find(query)
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit);
 
-    const total = await Token.countDocuments();
+    const total = await Token.countDocuments(query);
 
     return NextResponse.json({
       tokens,

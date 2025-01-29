@@ -370,7 +370,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   return (
     <>
       <div
-        className={`group relative bg-gradient-to-br from-[#0A0F1F] to-[#151933] rounded-xl border border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-6 cursor-pointer transform ${
+        className={`group relative bg-gradient-to-br from-[#0A0F1F] to-[#151933] rounded-xl border border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer transform ${
           isHovered ? 'scale-[1.02] shadow-[0_0_30px_-12px_rgba(0,255,163,0.3)]' : ''
         }`}
         onMouseEnter={() => setIsHovered(true)}
@@ -383,7 +383,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-3">
             <div className="relative">
               {token.logo && (
@@ -392,50 +392,50 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                   <Image
                     src={token.logo}
                     alt={`${token.name} logo`}
-                    width={48}
-                    height={48}
+                    width={36}
+                    height={36}
                     className="relative rounded-full ring-2 ring-[#03E1FF]/20 group-hover:ring-[#03E1FF]/40 transition-all duration-500"
                   />
                 </div>
               )}
               {token.metadata.price_change_24h > 5 && (
                 <div className="absolute -top-1 -right-1">
-                  <Sparkles className="w-4 h-4 text-[#00FFA3] animate-pulse" />
+                  <Sparkles className="w-3 h-3 text-[#00FFA3] animate-pulse" />
                 </div>
               )}
             </div>
-            <div className="flex flex-col">
+            <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-white text-lg group-hover:text-[#03E1FF] transition-colors duration-300">
+                <h3 className="font-semibold text-white text-base group-hover:text-[#03E1FF] transition-colors duration-300">
                   {token.name}
                 </h3>
                 {isMyToken && (
-                  <div className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20 shadow-[0_0_30px_-15px_rgba(0,255,163,0.3)] group/badge">
-                    <div className="flex items-center space-x-1.5">
-                      <Crown className="w-3.5 h-3.5 text-[#03E1FF]" />
-                      <span className="text-xs font-medium text-[#03E1FF]">Creator</span>
+                  <div className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20 shadow-[0_0_30px_-15px_rgba(0,255,163,0.3)] group/badge">
+                    <div className="flex items-center space-x-1">
+                      <Crown className="w-3 h-3 text-[#03E1FF]" />
+                      <span className="text-[10px] font-medium text-[#03E1FF]">Creator</span>
                     </div>
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs text-gray-400">
                 {token.symbol}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-white text-lg group-hover:text-[#03E1FF] transition-colors duration-300">
-              ${token.price.toFixed(4)}
+            <p className="font-semibold text-white text-sm group-hover:text-[#03E1FF] transition-colors duration-300">
+              ${token.price < 0.01 ? token.price.toFixed(8) : token.price.toFixed(2)}
             </p>
-            <div className={`flex items-center justify-end space-x-1 text-sm ${
+            <div className={`flex items-center justify-end space-x-1 text-xs ${
               token.metadata.price_change_24h >= 0
                 ? 'text-[#00FFA3]'
                 : 'text-red-500'
             }`}>
               {token.metadata.price_change_24h >= 0 ? (
-                <TrendingUp className="w-4 h-4" />
+                <TrendingUp className="w-3 h-3" />
               ) : (
-                <TrendingDown className="w-4 h-4" />
+                <TrendingDown className="w-3 h-3" />
               )}
               <span>{Math.abs(token.metadata.price_change_24h).toFixed(2)}%</span>
             </div>
@@ -443,7 +443,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Mini Chart */}
-        <div className="relative h-[100px] mb-4 group">
+        <div className="relative h-[60px] mb-3 group">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
             <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 animate-pulse" />
@@ -457,39 +457,37 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="p-3 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
-            <p className="text-gray-400 mb-1">Market Cap</p>
-            <p className="font-medium text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+            <p className="text-[10px] text-gray-400 mb-0.5">Market Cap</p>
+            <p className="font-medium text-xs text-white group-hover:text-[#03E1FF] transition-colors duration-300">
               {formatNumber(token.metadata.market_cap)}
             </p>
           </div>
-          <div className="p-3 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
-            <p className="text-gray-400 mb-1">24h Volume</p>
-            <p className="font-medium text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+            <p className="text-[10px] text-gray-400 mb-0.5">24h Volume</p>
+            <p className="font-medium text-xs text-white group-hover:text-[#03E1FF] transition-colors duration-300">
               {formatNumber(token.metadata.volume_24h)}
             </p>
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-[#03E1FF]/10">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-500 font-mono truncate group-hover:text-gray-400 transition-colors duration-300">
-              {token.contractAddress}
-            </p>
-            {canDelete && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(e);
-                }}
-                className="ml-2 p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-300"
-                title="Delete Token"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+        <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono">
+          <span className="truncate group-hover:text-gray-400 transition-colors duration-300 max-w-[80%]">
+            {token.contractAddress}
+          </span>
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(e);
+              }}
+              className="ml-2 p-1 rounded-md text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+              title="Delete Token"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
