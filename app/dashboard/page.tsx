@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import TokenCard from '@/components/tokens/TokenCard';
 import EmptyTokenGrid from '@/components/tokens/EmptyTokenGrid';
+import TrendingTokens from '@/components/tokens/TrendingTokens';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -24,6 +25,12 @@ interface Token {
   clerkUserId?: string;
   isSaved?: boolean;
 }
+
+const viewModes = [
+  { value: 'all', label: 'All Tokens' },
+  { value: 'my-tokens', label: 'My Tokens' },
+  { value: 'saved', label: 'Saved' }
+];
 
 export default function Dashboard() {
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -77,33 +84,6 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const renderEmptyState = () => {
-    if (viewMode === 'my-tokens') {
-      return (
-        <div className="min-h-[400px] flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 rounded-full flex items-center justify-center mb-4">
-            <Crown className="w-8 h-8 text-[#03E1FF]" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">No Created Tokens Yet</h3>
-          <p className="text-gray-400 mb-6 max-w-md">
-            Start building your token collection. Add tokens you want to track and manage in your personal dashboard.
-          </p>
-          <Link
-            href="/add-token"
-            className="group relative flex items-center px-4 py-2 text-sm font-medium text-white overflow-hidden rounded-lg transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
-            <div className="absolute inset-[1px] bg-[#0A0F1F] rounded-lg group-hover:bg-transparent transition-all duration-300" />
-            <Plus className="w-4 h-4 mr-2 relative z-10" />
-            <span className="relative z-10">Create Your First Token</span>
-          </Link>
-        </div>
-      );
-    }
-
-    return <EmptyTokenGrid onAddClick={() => router.push('/add-token')} />;
   };
 
   const handleDeleteClick = (contractAddress: string) => {
@@ -161,30 +141,8 @@ export default function Dashboard() {
     }
   };
 
-  const myTokens = tokens.filter(token => token.clerkUserId === userId);
-  const savedTokens = tokens.filter(token => token.isSaved);
-  const displayTokens = viewMode === 'my-tokens' 
-    ? myTokens 
-    : viewMode === 'saved' 
-    ? savedTokens 
-    : tokens;
-
-  const handleMenuOption = (option: string) => {
-    switch (option) {
-      case 'your-tokens':
-        setViewMode('my-tokens');
-        break;
-      case 'saved-tokens':
-        setViewMode('saved');
-        break;
-      case 'shill-vision':
-        // Implement shill vision feature
-        break;
-    }
-  };
-
-  const handleAddToken = (token: Token) => {
-    // Implementation of handleAddToken
+  const setViewMode = (mode: string) => {
+    router.push(`/dashboard?view=${mode}`);
   };
 
   if (isLoading) {
@@ -217,7 +175,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1F] pt-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0F1F] pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section with Premium Styling */}
         <div className="relative mb-8">
@@ -228,20 +186,20 @@ export default function Dashboard() {
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] bg-clip-text text-transparent">
                   Token Dashboard
                 </h1>
-                <p className="mt-2 text-gray-400">
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
                   Discover and track the latest tokens in the crypto space
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="flex items-center bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-[#03E1FF]/20">
+                <div className="flex items-center bg-white dark:bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/20">
                   {viewModes.map((mode) => (
                     <button
                       key={mode.value}
                       onClick={() => setViewMode(mode.value)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                         viewMode === mode.value
-                          ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-white shadow-[0_0_20px_-12px_rgba(0,255,163,0.5)]'
-                          : 'text-gray-400 hover:text-white'
+                          ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-gray-900 dark:text-white shadow-[0_0_20px_-12px_rgba(0,255,163,0.5)]'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       {mode.label}
@@ -267,19 +225,47 @@ export default function Dashboard() {
                 {[...Array(9)].map((_, i) => (
                   <div
                     key={i}
-                    className="bg-white/5 rounded-xl h-[300px] backdrop-blur-xl border border-[#03E1FF]/10"
+                    className="bg-white dark:bg-white/5 rounded-xl h-[300px] backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10"
                   />
                 ))}
               </div>
-            ) : tokens.length > 0 ? (
+            ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
+                  {/* Add Token Card - Always First */}
+                  <div className="transform transition-all duration-500 hover:z-10">
+                    <div
+                      onClick={() => setShowAddToken(true)}
+                      className="group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer h-full"
+                    >
+                      <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      <div className="flex flex-col items-center justify-center h-full space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                          <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                            Add New Token
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
+                            Track and manage your favorite tokens
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Existing Token Cards */}
                   {tokens.map((token, index) => (
                     <div
                       key={token.contractAddress}
                       className="transform transition-all duration-500 hover:z-10"
                       style={{
-                        animationDelay: `${index * 100}ms`,
+                        animationDelay: `${(index + 1) * 100}ms`,
                       }}
                     >
                       <TokenCard
@@ -290,6 +276,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
+
                 {/* Enhanced Pagination */}
                 {totalPages > 1 && (
                   <div className="mt-8 flex justify-center">
@@ -325,26 +312,6 @@ export default function Dashboard() {
                   </div>
                 )}
               </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4 bg-white/5 rounded-xl backdrop-blur-xl border border-[#03E1FF]/20">
-                <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center">
-                  <Inbox className="w-8 h-8 text-[#03E1FF]" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">No Tokens Found</h3>
-                <p className="text-gray-400 text-center max-w-md">
-                  {viewMode === 'my-tokens'
-                    ? "You haven't added any tokens yet. Start by adding your first token!"
-                    : 'No tokens match your current filters. Try adjusting your search criteria.'}
-                </p>
-                {viewMode === 'my-tokens' && (
-                  <button
-                    onClick={() => setShowAddToken(true)}
-                    className="mt-6 px-6 py-2 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg text-white font-medium hover:opacity-90 transition-opacity duration-300"
-                  >
-                    Add Your First Token
-                  </button>
-                )}
-              </div>
             )}
           </div>
         </div>
@@ -357,7 +324,7 @@ export default function Dashboard() {
         title="Add New Token"
         size="md"
       >
-        <AddTokenForm onSuccess={handleAddToken} />
+        <AddTokenForm onSuccess={() => setShowAddToken(false)} />
       </Modal>
     </div>
   );
