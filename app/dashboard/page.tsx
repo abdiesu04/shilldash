@@ -48,26 +48,41 @@ export default function Dashboard() {
   const [showAddToken, setShowAddToken] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn && (viewMode === 'my-tokens' || viewMode === 'saved')) {
+    if (!isLoaded) return; // Wait for auth to load
+    
+    if ((viewMode === 'my-tokens' || viewMode === 'saved') && !isSignedIn) {
       router.push('/sign-in');
       return;
     }
+    
     fetchTokens();
-  }, [page, viewMode, isLoaded, isSignedIn]);
+  }, [page, viewMode, isLoaded, isSignedIn, userId]);
 
   const fetchTokens = async () => {
     try {
       setIsLoading(true);
       setError('');
 
+      // Only check authentication for my-tokens and saved views
       if ((viewMode === 'my-tokens' || viewMode === 'saved') && !isSignedIn) {
-        throw new Error('Please sign in to view your tokens');
+        if (!isLoaded) {
+          // Still loading auth state, wait
+          return;
+        }
+        router.push('/sign-in');
+        return;
       }
 
-      const response = await fetch(`/api/tokens/list?page=${page}&limit=9${viewMode === 'my-tokens' ? '&userId=' + userId : ''}`);
+      let url = `/api/tokens/list?page=${page}&limit=9`;
+      if (viewMode === 'my-tokens' && isSignedIn) {
+        url += `&userId=${userId}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Authentication required. Please sign in again.');
+          router.push('/sign-in');
+          return;
         }
         throw new Error('Failed to fetch tokens');
       }
@@ -78,9 +93,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching tokens:', error);
       setError(error instanceof Error ? error.message : 'Error fetching tokens');
-      if (error instanceof Error && error.message.includes('Authentication')) {
-        router.push('/sign-in');
-      }
     } finally {
       setIsLoading(false);
     }
