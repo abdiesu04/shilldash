@@ -1,150 +1,225 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Loader2, CopyIcon, CheckIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 
 interface AddTokenFormProps {
-  onSuccess: () => void;
+  onSuccess: (token: any) => void;
 }
 
+const tokenSchema = z.object({
+  name: z.string().min(1, 'Token name is required'),
+  symbol: z.string().min(1, 'Token symbol is required'),
+  contractAddress: z.string().min(42, 'Invalid contract address').max(42, 'Invalid contract address'),
+  logo: z.string().url('Invalid logo URL'),
+  price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: 'Price must be a positive number',
+  }),
+  marketCap: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: 'Market cap must be a non-negative number',
+  }),
+  volume24h: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: 'Volume must be a non-negative number',
+  }),
+});
+
+type FormData = z.infer<typeof tokenSchema>;
+
 export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
-  const [address, setAddress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: zodResolver(tokenSchema),
+  });
 
+  const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch('/api/tokens/add', {
+      setIsSubmitting(true);
+      setError('');
+
+      const response = await fetch('/api/tokens', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ contractAddress: address }),
+        body: JSON.stringify({
+          ...data,
+          price: Number(data.price),
+          metadata: {
+            market_cap: Number(data.marketCap),
+            volume_24h: Number(data.volume24h),
+            price_change_24h: 0, // Default value for new tokens
+          },
+        }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add token');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to add token');
       }
 
-      onSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add token');
+      const token = await response.json();
+      onSuccess(token);
+      reset();
+    } catch (error) {
+      console.error('Error adding token:', error);
+      setError(error instanceof Error ? error.message : 'Failed to add token');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(text);
-    setTimeout(() => setCopied(''), 2000);
-  };
-
-  const exampleTokens = [
-    {
-      name: 'USDC',
-      address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    },
-    {
-      name: 'BONK',
-      address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-    },
-  ];
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label
-          htmlFor="address"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Token Contract Address
-        </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {error && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-1">
+            Token Name
+          </label>
           <input
+            {...register('name')}
             type="text"
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-crypto-dark-700 rounded-lg focus:ring-2 focus:ring-crypto-primary focus:border-transparent bg-white dark:bg-crypto-dark-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-            placeholder="Enter Solana token address"
-            required
+            id="name"
+            placeholder="e.g., Ethereum"
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
           />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+          )}
         </div>
-        {error && (
-          <p className="mt-2 text-sm text-crypto-danger">{error}</p>
-        )}
+
+        <div>
+          <label htmlFor="symbol" className="block text-sm font-medium text-gray-200 mb-1">
+            Token Symbol
+          </label>
+          <input
+            {...register('symbol')}
+            type="text"
+            id="symbol"
+            placeholder="e.g., ETH"
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+          />
+          {errors.symbol && (
+            <p className="mt-1 text-sm text-red-500">{errors.symbol.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-200 mb-1">
+            Contract Address
+          </label>
+          <input
+            {...register('contractAddress')}
+            type="text"
+            id="contractAddress"
+            placeholder="0x..."
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300 font-mono"
+          />
+          {errors.contractAddress && (
+            <p className="mt-1 text-sm text-red-500">{errors.contractAddress.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="logo" className="block text-sm font-medium text-gray-200 mb-1">
+            Logo URL
+          </label>
+          <input
+            {...register('logo')}
+            type="url"
+            id="logo"
+            placeholder="https://..."
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+          />
+          {errors.logo && (
+            <p className="mt-1 text-sm text-red-500">{errors.logo.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="price" className="block text-sm font-medium text-gray-200 mb-1">
+            Current Price (USD)
+          </label>
+          <input
+            {...register('price')}
+            type="number"
+            step="any"
+            id="price"
+            placeholder="0.00"
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+          />
+          {errors.price && (
+            <p className="mt-1 text-sm text-red-500">{errors.price.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="marketCap" className="block text-sm font-medium text-gray-200 mb-1">
+            Market Cap (USD)
+          </label>
+          <input
+            {...register('marketCap')}
+            type="number"
+            step="any"
+            id="marketCap"
+            placeholder="0.00"
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+          />
+          {errors.marketCap && (
+            <p className="mt-1 text-sm text-red-500">{errors.marketCap.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="volume24h" className="block text-sm font-medium text-gray-200 mb-1">
+            24h Volume (USD)
+          </label>
+          <input
+            {...register('volume24h')}
+            type="number"
+            step="any"
+            id="volume24h"
+            placeholder="0.00"
+            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+          />
+          {errors.volume24h && (
+            <p className="mt-1 text-sm text-red-500">{errors.volume24h.message}</p>
+          )}
+        </div>
       </div>
 
-      <div className="bg-gray-50 dark:bg-crypto-dark-700 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-          Example Tokens
-        </h3>
-        <div className="space-y-3">
-          {exampleTokens.map((token) => (
-            <div
-              key={token.address}
-              className="flex items-center justify-between p-3 bg-white dark:bg-crypto-dark-800 rounded-lg border border-gray-200 dark:border-crypto-dark-600"
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {token.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                  {token.address}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setAddress(token.address)}
-                  className="text-xs px-2 py-1 bg-crypto-primary/10 text-crypto-primary rounded-md hover:bg-crypto-primary/20 transition-colors"
-                >
-                  Use
-                </button>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(token.address)}
-                  className="text-xs px-2 py-1 bg-gray-100 dark:bg-crypto-dark-700 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-crypto-dark-600 transition-colors"
-                >
-                  {copied === token.address ? (
-                    <CheckIcon className="w-4 h-4" />
-                  ) : (
-                    <CopyIcon className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-crypto-primary hover:bg-crypto-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-crypto-primary disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
-        >
-          {isLoading ? (
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full relative flex items-center justify-center px-6 py-3 text-sm font-medium text-white rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
+        <span className="relative flex items-center">
+          {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Adding...
+              Adding Token...
             </>
           ) : (
             'Add Token'
           )}
-        </button>
-      </div>
+        </span>
+      </button>
     </form>
   );
 } 

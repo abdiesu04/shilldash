@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
-import Modal from '@/components/Modal';
-import AddTokenForm from '@/components/AddTokenForm';
+import Modal from '@/components/ui/Modal';
+import AddTokenForm from '@/components/tokens/AddTokenForm';
 
 interface Token {
   contractAddress: string;
