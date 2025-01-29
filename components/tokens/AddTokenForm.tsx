@@ -6,8 +6,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
 
+interface Token {
+  contractAddress: string;
+  name: string;
+  symbol: string;
+  logo: string;
+  price: number;
+  metadata: {
+    market_cap: number;
+    volume_24h: number;
+    price_change_24h: number;
+  };
+}
+
 interface AddTokenFormProps {
-  onSuccess: (token: any) => void;
+  onSuccess: (token: Token) => void;
 }
 
 const tokenSchema = z.object({

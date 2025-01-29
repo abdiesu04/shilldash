@@ -1,6 +1,4 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
 import {
@@ -9,17 +7,16 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Filler,
+  Title,
   Tooltip,
   Legend,
+  Scale,
+  CoreScaleOptions,
 } from 'chart.js';
-import { Sparkles, TrendingUp, TrendingDown, Clock, ChevronRight, Trash2, Crown, Shield, Star, StarOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff } from 'lucide-react';
 import Modal from '../ui/Modal';
-import type { ChartData, ScriptableContext, TooltipItem } from 'chart.js';
-import { useSession } from '@clerk/nextjs';
-import type { ReactNode } from 'react';
+import type { ChartData, ScriptableContext } from 'chart.js';
 import { useAuth } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
 
 // Register Chart.js plugins
 ChartJS.register(
@@ -27,37 +24,10 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Filler,
+  Title,
   Tooltip,
   Legend
 );
-
-// Define chart animations with more subtle effects
-const animations = {
-  y: {
-    easing: 'easeOutQuart',
-    duration: 1000,
-    from: (ctx: any) => {
-      if (ctx.type === 'data') {
-        if (ctx.mode === 'default' && !ctx.dropped) {
-          ctx.dropped = true;
-          return ctx.dataset.data[ctx.dataIndex];
-        }
-      }
-      return false;
-    }
-  }
-};
-
-const getChartBounds = (data: number[]) => {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const padding = (max - min) * 0.05;
-  return {
-    suggestedMin: min - padding,
-    suggestedMax: max + padding,
-  };
-};
 
 const timeframes = [
   { label: '1H', value: '1h' },
@@ -105,19 +75,15 @@ const generateChartData = (basePrice: number, dataPoints: number = 24) => {
   };
 };
 
-// Chart options types
-type ChartContext = {
-  type: string;
-  mode: string;
-  dropped?: boolean;
-  dataset: {
-    data: number[];
+// Chart types
+interface ChartCallbackType {
+  parsed: {
+    x: number;
+    y: number;
   };
-  dataIndex: number;
-};
+}
 
 export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
-  const { session } = useSession();
   const { userId } = useAuth();
   const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
   const isMyToken = userId && token.clerkUserId === userId;
@@ -125,7 +91,6 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const [isHovered, setIsHovered] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
-  const [isChartLoading, setIsChartLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -188,18 +153,14 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           family: 'Inter',
         },
         callbacks: {
-          label: function(context: TooltipItem<'line'>) {
+          label: (context: ChartCallbackType): string => {
             return `$${Number(context.parsed.y).toFixed(6)}`;
           },
-          title: function(context: TooltipItem<'line'>[]) {
+          title: (context: ChartCallbackType[]): string => {
             const value = context[0].parsed.x;
-            if (selectedTimeframe === '1h') {
-              return `${value}m ago`;
-            } else if (selectedTimeframe === '24h') {
-              return `${value}h ago`;
-            } else {
-              return `${value}d ago`;
-            }
+            if (selectedTimeframe === '1h') return `${value}m ago`;
+            if (selectedTimeframe === '24h') return `${value}h ago`;
+            return `${value}d ago`;
           }
         },
       },
@@ -213,14 +174,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         },
         ticks: {
           display: false,
-        },
-        min: 0,
-        callback: (value: number) => {
-          if (selectedTimeframe === '1h') {
-            return `${value}m`;
-          } else if (selectedTimeframe === '24h') {
-            return `${value}h`;
-          } else {
+          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
+            const value = Number(tickValue);
+            if (selectedTimeframe === '1h') return `${value}m`;
+            if (selectedTimeframe === '24h') return `${value}h`;
             return `${value}d`;
           }
         },
@@ -233,10 +190,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         },
         ticks: {
           display: false,
+          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
+            return `$${Number(tickValue).toFixed(2)}`;
+          }
         },
-        suggestedMin: minPrice - priceMargin,
-        suggestedMax: maxPrice + priceMargin,
-        callback: (value: number) => `$${value.toFixed(2)}`,
       },
     },
     elements: {
@@ -308,14 +265,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           },
           maxRotation: 0,
           padding: 8,
-          callback: (value: any) => {
-            if (selectedTimeframe === '1h') {
-              return `${value}m`;
-            } else if (selectedTimeframe === '24h') {
-              return `${value}h`;
-            } else {
-              return `${value}d`;
-            }
+          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
+            const value = Number(tickValue);
+            if (selectedTimeframe === '1h') return `${value}m`;
+            if (selectedTimeframe === '24h') return `${value}h`;
+            return `${value}d`;
           },
         },
         border: {
@@ -339,7 +293,9 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
             family: 'Inter',
           },
           padding: 12,
-          callback: (value: any) => `$${value.toFixed(2)}`,
+          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
+            return `$${Number(tickValue).toFixed(2)}`;
+          }
         },
         border: {
           display: false,
@@ -380,11 +336,9 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   };
 
   const handleTimeframeChange = async (timeframe: string) => {
-    setIsChartLoading(true);
     setSelectedTimeframe(timeframe);
     // Simulate loading state for demo
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsChartLoading(false);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
