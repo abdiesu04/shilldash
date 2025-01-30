@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter } from 'next/font/google';
+import { Toaster } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import './globals.css';
@@ -26,6 +27,16 @@ export default function RootLayout({
               <Navbar />
               <main className="flex-grow">{children}</main>
               <Footer />
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  style: {
+                    background: 'rgba(10, 15, 31, 0.95)',
+                    color: '#fff',
+                    border: '1px solid rgba(3, 225, 255, 0.1)',
+                  },
+                }}
+              />
             </div>
           </ThemeProvider>
         </ClerkProvider>

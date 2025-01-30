@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff } from 'lucide-react';
 import Modal from '../ui/Modal';
+import TokenReactions from './TokenReactions';
 import type { ChartData, ScriptableContext } from 'chart.js';
 import { useAuth } from '@clerk/nextjs';
 
@@ -54,6 +55,11 @@ interface TokenCardProps {
     };
     clerkUserId?: string;
     isSaved?: boolean;
+    reactionCounts?: {
+      fire: number;
+      poop: number;
+      rocket: number;
+    };
   };
   onDelete?: (contractAddress: string) => void;
   showDeleteButton?: boolean;
@@ -93,6 +99,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
   const [isMobile, setIsMobile] = useState(false);
+  const [reactionCounts, setReactionCounts] = useState(token.reactionCounts || {
+    fire: 0,
+    poop: 0,
+    rocket: 0
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -371,6 +382,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     }
   };
 
+  const handleReactionUpdate = (newCounts: typeof reactionCounts) => {
+    setReactionCounts(newCounts);
+  };
+
   return (
     <>
       <div
@@ -388,6 +403,13 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Add TokenReactions component */}
+        <TokenReactions
+          tokenId={token.contractAddress}
+          initialReactionCounts={reactionCounts}
+          onReactionUpdate={handleReactionUpdate}
+        />
 
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-3">
