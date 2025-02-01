@@ -86,13 +86,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { contractAddress } = await request.json();
-    console.log('Contract address received:', contractAddress);
-
-    // Fetch token info
-    console.log('Fetching token info...');
-    const tokenInfo = await getTokenInfo(contractAddress);
-    console.log('Token info received:', tokenInfo);
+    const data = await request.json();
+    console.log('Token data received:', data);
 
     // Connect to database
     console.log('Using cached database connection');
@@ -100,7 +95,7 @@ export async function POST(request: Request) {
 
     // Check if token already exists for this user
     const existingToken = await Token.findOne({
-      contractAddress,
+      contractAddress: data.contractAddress,
       clerkUserId: userId
     });
 
@@ -108,18 +103,34 @@ export async function POST(request: Request) {
       // Update existing token
       console.log('Updating existing token...');
       Object.assign(existingToken, {
-        ...tokenInfo,
+        name: data.name,
+        symbol: data.symbol,
+        logo: data.logo,
+        price: Number(data.price),
+        metadata: {
+          market_cap: Number(data.marketCap),
+          volume_24h: Number(data.volume24h),
+          price_change_24h: 0, // Default for manual entries
+        },
         lastUpdated: new Date()
       });
       await existingToken.save();
-      return NextResponse.json({ message: 'Token updated successfully' });
+      return NextResponse.json({ message: 'Token updated successfully', token: existingToken });
     }
 
     // Create new token
     console.log('Creating new token...');
     const token = new Token({
-      ...tokenInfo,
-      contractAddress,
+      contractAddress: data.contractAddress,
+      name: data.name,
+      symbol: data.symbol,
+      logo: data.logo,
+      price: Number(data.price),
+      metadata: {
+        market_cap: Number(data.marketCap),
+        volume_24h: Number(data.volume24h),
+        price_change_24h: 0, // Default for manual entries
+      },
       clerkUserId: userId,
     });
 
@@ -131,21 +142,9 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error adding token:', error);
-    let errorMessage = 'Unknown error occurred';
-    let statusCode = 500;
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      if (axios.isAxiosError(error)) {
-        statusCode = error.response?.status || 500;
-        errorMessage = error.response?.data?.error || error.message;
-      }
-    }
-
     return NextResponse.json({
       message: 'Error adding token',
-      error: errorMessage,
-      status: statusCode
-    }, { status: statusCode });
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }, { status: 500 });
   }
 } 

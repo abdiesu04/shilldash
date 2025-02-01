@@ -13,7 +13,7 @@ interface AddTokenFormProps {
 const tokenSchema = z.object({
   name: z.string().min(1, 'Token name is required'),
   symbol: z.string().min(1, 'Token symbol is required'),
-  contractAddress: z.string().min(42, 'Invalid contract address').max(42, 'Invalid contract address'),
+  contractAddress: z.string().min(1, 'Contract address is required'),
   logo: z.string().url('Invalid logo URL'),
   price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Price must be a positive number',
@@ -46,7 +46,7 @@ export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
       setIsSubmitting(true);
       setError('');
 
-      const response = await fetch('/api/tokens', {
+      const response = await fetch('/api/tokens/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

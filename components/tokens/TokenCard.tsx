@@ -20,6 +20,8 @@ import { useSession } from '@clerk/nextjs';
 import type { ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import ReactionButton from './ReactionButton';
 
 // Register Chart.js plugins
 ChartJS.register(
@@ -89,6 +91,12 @@ interface TokenCardProps {
   showDeleteButton?: boolean;
 }
 
+interface ReactionCounts {
+  rocket: number;
+  poop: number;
+  like: number;
+}
+
 const generateChartData = (basePrice: number, dataPoints: number = 24) => {
   const volatility = 0.02; // 2% volatility
   const trend = Math.random() > 0.5 ? 1 : -1; // Random trend direction
@@ -121,6 +129,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const { userId } = useAuth();
   const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
   const isMyToken = userId && token.clerkUserId === userId;
+  const router = useRouter();
 
   const [isHovered, setIsHovered] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -128,6 +137,13 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
   const [isMobile, setIsMobile] = useState(false);
+  const [reactionCounts, setReactionCounts] = useState<ReactionCounts>({
+    rocket: 0,
+    poop: 0,
+    like: 0,
+  });
+  const [userReaction, setUserReaction] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -139,6 +155,46 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    fetchReactions();
+  }, [token.contractAddress, userId]);
+
+  const fetchReactions = async () => {
+    try {
+      const response = await fetch(
+        `/api/reactions?tokenAddress=${token.contractAddress}${userId ? `&userId=${userId}` : ''}`
+      );
+      const data = await response.json();
+      setReactionCounts(data.counts);
+      setUserReaction(data.userReaction);
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReaction = async (type: string) => {
+    try {
+      const response = await fetch('/api/reactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tokenAddress: token.contractAddress,
+          type,
+        }),
+      });
+
+      const data = await response.json();
+      setReactionCounts(data.counts);
+      setUserReaction(data.userReaction);
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    }
+  };
 
   const formatNumber = (num: number) => {
     if (num >= 1e9) {
@@ -659,6 +715,34 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           }
         }
       `}</style>
+
+      <div className="flex justify-center space-x-2 pt-4 border-t border-[#03E1FF]/10">
+        {!isLoading && (
+          <>
+            <ReactionButton
+              tokenAddress={token.contractAddress}
+              type="rocket"
+              count={reactionCounts.rocket}
+              userReaction={userReaction}
+              onReact={handleReaction}
+            />
+            <ReactionButton
+              tokenAddress={token.contractAddress}
+              type="poop"
+              count={reactionCounts.poop}
+              userReaction={userReaction}
+              onReact={handleReaction}
+            />
+            <ReactionButton
+              tokenAddress={token.contractAddress}
+              type="like"
+              count={reactionCounts.like}
+              userReaction={userReaction}
+              onReact={handleReaction}
+            />
+          </>
+        )}
+      </div>
     </>
   );
 }
