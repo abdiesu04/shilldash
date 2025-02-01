@@ -3,15 +3,27 @@
 import { Plus, Sparkles, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth, SignInButton } from '@clerk/nextjs';
-import Modal from '../ui/Modal';
-import AddTokenForm from './AddTokenForm';
+import { useRouter } from 'next/navigation';
 
 interface EmptyTokenGridProps {
-  onAddClick: () => void;
+  message?: string;
+  actionLabel?: string;
+  actionUrl?: string;
 }
 
-export default function EmptyTokenGrid({ onAddClick }: EmptyTokenGridProps) {
+export default function EmptyTokenGrid({ 
+  message = "You haven't created any tokens yet",
+  actionLabel = "Create Your First Token",
+  actionUrl = "/dashboard/add-token"
+}: EmptyTokenGridProps) {
   const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  const handleAction = () => {
+    if (actionUrl) {
+      router.push(actionUrl);
+    }
+  };
 
   return (
     <div className="min-h-[400px] flex items-center justify-center">
@@ -27,7 +39,7 @@ export default function EmptyTokenGrid({ onAddClick }: EmptyTokenGridProps) {
         {/* Content */}
         {isSignedIn ? (
           <button
-            onClick={onAddClick}
+            onClick={handleAction}
             className="relative h-full w-full flex flex-col items-center justify-center p-6 space-y-4"
           >
             <div className="relative">
@@ -39,10 +51,10 @@ export default function EmptyTokenGrid({ onAddClick }: EmptyTokenGridProps) {
             
             <div className="text-center space-y-2">
               <h3 className="text-xl font-bold bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] bg-clip-text text-transparent">
-                Add Your First Token
+                {actionLabel}
               </h3>
               <p className="text-sm text-gray-400">
-                Time to mine some gems! ✨
+                {message}
               </p>
             </div>
           </button>

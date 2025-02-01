@@ -126,9 +126,10 @@ type ChartContext = {
 
 export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
   const { session } = useSession();
-  const { userId } = useAuth();
-  const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
+  const { userId } = useAuth(); 
   const isMyToken = userId && token.clerkUserId === userId;
+  const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
+
   const router = useRouter();
 
   const [isHovered, setIsHovered] = useState(false);

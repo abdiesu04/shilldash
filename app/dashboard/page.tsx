@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 import TokenCard from '@/components/tokens/TokenCard';
 import EmptyTokenGrid from '@/components/tokens/EmptyTokenGrid';
 import TrendingTokens from '@/components/tokens/TrendingTokens';
-import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import AddTokenForm from '@/components/tokens/AddTokenForm';
 
@@ -40,7 +39,6 @@ export default function Dashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
   const searchParams = useSearchParams();
   const viewMode = searchParams?.get('view') || 'all';
   const { userId, isLoaded, isSignedIn } = useAuth();
@@ -75,7 +73,7 @@ export default function Dashboard() {
 
       let url = `/api/tokens/list?page=${page}&limit=9`;
       if (viewMode === 'my-tokens' && isSignedIn) {
-        url += `&userId=${userId}`;
+        url += `&view=my-tokens&userId=${userId}`;
       }
 
       const response = await fetch(url);
@@ -88,6 +86,14 @@ export default function Dashboard() {
       }
       
       const data = await response.json();
+      
+      // Handle no tokens created case
+      if (viewMode === 'my-tokens' && data.message === 'no_tokens_created') {
+        setTokens([]);
+        setTotalPages(0);
+        return;
+      }
+
       setTokens(data.tokens);
       setTotalPages(data.totalPages);
     } catch (error) {
@@ -131,10 +137,6 @@ export default function Dashboard() {
 
       // Remove the token from the local state
       setTokens(prevTokens => prevTokens.filter(token => token.contractAddress !== contractAddress));
-      
-      // Show success message
-      setSuccessMessage('Token deleted successfully');
-      setTimeout(() => setSuccessMessage(''), 3000);
       
       // Close the confirmation dialog
       setShowConfirmDialog(false);
@@ -243,84 +245,70 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
-                  {/* Add Token Card - Always First */}
-                  <div className="transform transition-all duration-500 hover:z-10">
-                    <div
-                      onClick={() => setShowAddToken(true)}
-                      className="group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer h-full"
-                    >
-                      <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      
-                      <div className="flex flex-col items-center justify-center h-full space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                          <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-                            Add New Token
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
-                            Track and manage your favorite tokens
-                          </p>
+                {viewMode === 'my-tokens' && tokens.length === 0 ? (
+                  <EmptyTokenGrid 
+                    message="Start your journey by creating your first token!"
+                    actionLabel="Create Token"
+                    actionUrl="/dashboard/add-token"
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
+                    {/* Add Token Card - Always First */}
+                    <div className="transform transition-all duration-500 hover:z-10">
+                      <div
+                        onClick={() => setShowAddToken(true)}
+                        className="h-full cursor-pointer group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border-2 border-dashed border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500"
+                      >
+                        <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        <div className="flex flex-col items-center justify-center h-full space-y-4">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                            <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
+                          </div>
+                          <div className="text-center">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                              Add New Token
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
+                              Track and manage your favorite tokens
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Existing Token Cards */}
-                  {tokens.map((token, index) => (
-                    <div
-                      key={token.contractAddress}
-                      className="transform transition-all duration-500 hover:z-10"
-                      style={{
-                        animationDelay: `${(index + 1) * 100}ms`,
-                      }}
-                    >
+                    
+                    {/* Token Cards */}
+                    {tokens.map((token) => (
                       <TokenCard
+                        key={token.contractAddress}
                         token={token}
-                        onDelete={handleDeleteToken}
+                        onDelete={handleDeleteClick}
                         showDeleteButton={viewMode === 'my-tokens'}
                       />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Enhanced Pagination */}
+                    ))}
+                  </div>
+                )}
+                
+                {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center">
-                    <div className="inline-flex items-center bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-[#03E1FF]/20">
-                      <button
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        disabled={page === 1}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      {[...Array(totalPages)].map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setPage(i + 1)}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-300 ${
-                            page === i + 1
-                              ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-white shadow-[0_0_20px_-12px_rgba(0,255,163,0.5)]'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => setPage(Math.min(totalPages, page + 1))}
-                        disabled={page === totalPages}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
+                  <div className="mt-8 flex justify-center space-x-2">
+                    <button
+                      onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                      disabled={page === 1}
+                      className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 disabled:opacity-50"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={page === totalPages}
+                      className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 disabled:opacity-50"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   </div>
                 )}
               </>
@@ -334,9 +322,40 @@ export default function Dashboard() {
         isOpen={showAddToken}
         onClose={() => setShowAddToken(false)}
         title="Add New Token"
-        size="md"
+        size="lg"
       >
-        <AddTokenForm onSuccess={() => setShowAddToken(false)} />
+        <AddTokenForm onSuccess={() => {
+          setShowAddToken(false);
+          fetchTokens();
+        }} />
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmDialog}
+        onClose={handleCancelDelete}
+        title="Delete Token"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete this token? This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={handleCancelDelete}
+              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => tokenToDelete && handleDeleteToken(tokenToDelete)}
+              className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

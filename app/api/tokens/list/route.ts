@@ -18,11 +18,10 @@ export async function GET(request: Request) {
     let query = {};
     let sortOptions = {};
 
-    // If viewing user's tokens, only show tokens created by the user
+    // If viewing user's tokens, only show tokens created by the user (isMyToken)
     if (viewMode === 'my-tokens' && userId) {
       query = { 
-        clerkUserId: userId,
-        'metadata.isCreator': true  // Add this to ensure we only get tokens where user is creator
+        clerkUserId: userId  // Only show tokens where the user is the creator
       };
       console.log('My tokens query:', query);
       sortOptions = { lastUpdated: -1 }; // Sort by last updated for user's tokens
@@ -47,18 +46,33 @@ export async function GET(request: Request) {
       .skip(skip)
       .limit(limit);
     
-    // Add isCreator flag to each token
-    const tokensWithCreatorFlag = tokens.map(token => ({
-      ...token.toObject(),
-      metadata: {
-        ...token.metadata,
-        isCreator: token.clerkUserId === userId
-      }
-    }));
+    // Transform tokens to add isCreator flag
+    const tokensWithCreatorFlag = tokens.map(token => {
+      const tokenObj = token.toObject();
+      return {
+        ...tokenObj,
+        metadata: {
+          ...tokenObj.metadata,
+          isCreator: tokenObj.clerkUserId === userId
+        }
+      };
+    });
 
     console.log(`Found ${tokens.length} tokens`);
 
     const total = await Token.countDocuments(query);
+
+    // If no tokens found in my-tokens view, return specific message
+    if (viewMode === 'my-tokens' && tokens.length === 0) {
+      return NextResponse.json({
+        tokens: [],
+        totalPages: 0,
+        currentPage: 1,
+        total: 0,
+        message: 'no_tokens_created',
+        redirectTo: '/dashboard/add-token'
+      });
+    }
 
     return NextResponse.json({
       tokens: tokensWithCreatorFlag,
