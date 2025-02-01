@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
 interface ReactionButtonProps {
   tokenAddress: string;
@@ -17,22 +16,14 @@ const emojis = {
   like: '❤️',
 };
 
-const colors = {
-  rocket: '#00FFA3',
-  poop: '#8B4513',
-  like: '#FF3B30',
-};
-
 const SignInAlert = ({ isVisible, onClose }: { isVisible: boolean; onClose: () => void }) => {
-  const router = useRouter();
-
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="fixed inset-0 flex items-center justify-center z-50 px-4"
           onClick={onClose}
         >
@@ -43,40 +34,22 @@ const SignInAlert = ({ isVisible, onClose }: { isVisible: boolean; onClose: () =
             exit={{ opacity: 0 }}
           />
           <motion.div
-            className="relative bg-white dark:bg-[#0A0F1F] rounded-xl p-6 shadow-xl border border-[#03E1FF]/20 max-w-md w-full"
+            className="relative bg-[#0A0F1F] rounded-lg p-4 shadow-lg border border-[#03E1FF]/20 max-w-sm"
             onClick={e => e.stopPropagation()}
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="text-center space-y-4">
-              <div className="flex justify-center mb-4">
-                <div className="flex space-x-2">
-                  <span className="text-2xl">🚀</span>
-                  <span className="text-2xl">❤️</span>
-                  <span className="text-2xl">💩</span>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-1">
+                <span>🚀</span>
+                <span>❤️</span>
+                <span>💩</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Sign in to React
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                Join our community to share your reactions and engage with other traders!
+              <p className="text-sm text-gray-300">
+                Please sign in using the navigation bar to react
               </p>
-              <div className="flex flex-col space-y-2 pt-4">
-                <button
-                  onClick={() => router.push('/sign-in')}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg font-medium text-white hover:opacity-90 transition-opacity"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={onClose}
-                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/5 rounded-lg font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                >
-                  Maybe Later
-                </button>
-              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -86,7 +59,6 @@ const SignInAlert = ({ isVisible, onClose }: { isVisible: boolean; onClose: () =
 };
 
 export default function ReactionButton({ 
-  tokenAddress, 
   type, 
   count, 
   userReaction, 
@@ -154,7 +126,7 @@ export default function ReactionButton({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.5, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`text-lg ${isSelected ? 'grayscale-0' : 'grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition-all duration-200'}`}
+            className={`text-lg ${isSelected ? 'opacity-100' : 'opacity-70 hover:opacity-100 transition-all duration-200'}`}
           >
             {emoji}
           </motion.div>
