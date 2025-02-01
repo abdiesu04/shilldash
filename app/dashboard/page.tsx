@@ -71,10 +71,7 @@ export default function Dashboard() {
         return;
       }
 
-      let url = `/api/tokens/list?page=${page}&limit=9`;
-      if (viewMode === 'my-tokens' && isSignedIn) {
-        url += `&view=my-tokens&userId=${userId}`;
-      }
+      const url = `/api/tokens/list?page=${page}&limit=9&view=${viewMode}`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -87,8 +84,8 @@ export default function Dashboard() {
       
       const data = await response.json();
       
-      // Handle no tokens created case
-      if (viewMode === 'my-tokens' && data.message === 'no_tokens_created') {
+      // Handle empty states
+      if (data.message === 'no_tokens_created' || data.message === 'no_saved_tokens') {
         setTokens([]);
         setTotalPages(0);
         return;
@@ -250,6 +247,12 @@ export default function Dashboard() {
                     message="Start your journey by creating your first token!"
                     actionLabel="Create Token"
                     onAction={() => setShowAddToken(true)}
+                  />
+                ) : viewMode === 'saved' && tokens.length === 0 ? (
+                  <EmptyTokenGrid
+                    message="You haven't saved any tokens yet. Browse and save tokens you're interested in!"
+                    actionLabel="Browse Tokens"
+                    onAction={() => router.push('/dashboard?view=all')}
                   />
                 ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">

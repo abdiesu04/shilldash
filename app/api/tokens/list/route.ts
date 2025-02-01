@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
-import { Token } from '@/models';
+import { Token, User } from '@/models';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: Request) {
   try {
@@ -8,49 +9,90 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const viewMode = searchParams.get('view') || 'all';
-    const userId = searchParams.get('userId');
     const skip = (page - 1) * limit;
 
-    console.log('Fetching tokens with params:', { page, limit, viewMode, userId });
+    const session = await auth();
+    const userId = session.userId;
+    if ((viewMode === 'my-tokens' || viewMode === 'saved') && !userId) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
 
     await connectToDatabase();
 
     let query = {};
     let sortOptions = {};
+    let tokens = [];
+    let total = 0;
 
-    // If viewing user's tokens, only show tokens created by the user (isMyToken)
-    if (viewMode === 'my-tokens' && userId) {
-      query = { 
-        clerkUserId: userId  // Only show tokens where the user is the creator
-      };
-      console.log('My tokens query:', query);
-      sortOptions = { lastUpdated: -1 }; // Sort by last updated for user's tokens
-    } else if (viewMode === 'trending') {
-      // For trending view, filter tokens with positive price change and high volume
-      query = {
-        'metadata.volume_24h': { $gt: 0 },
-        'metadata.price_change_24h': { $gt: 0 }
-      };
-      sortOptions = { 
-        'metadata.volume_24h': -1,
-        'metadata.price_change_24h': -1 
-      };
+    if (viewMode === 'saved' && userId) {
+      // Get user's saved tokens
+      const user = await User.findOne({ clerkUserId: userId });
+      if (!user || !user.savedTokens || user.savedTokens.length === 0) {
+        return NextResponse.json({
+          tokens: [],
+          totalPages: 0,
+          currentPage: 1,
+          total: 0,
+          message: 'no_saved_tokens'
+        });
+      }
+
+      // Find all tokens that are in the user's savedTokens array
+      tokens = await Token.find({
+        contractAddress: { $in: user.savedTokens }
+      })
+        .sort({ 'metadata.market_cap': -1 })
+        .skip(skip)
+        .limit(limit);
+
+      total = await Token.countDocuments({
+        contractAddress: { $in: user.savedTokens }
+      });
+
+    } else if (viewMode === 'my-tokens' && userId) {
+      query = { clerkUserId: userId };
+      sortOptions = { lastUpdated: -1 };
+      
+      tokens = await Token.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit);
+
+      total = await Token.countDocuments(query);
+
+      if (tokens.length === 0) {
+        return NextResponse.json({
+          tokens: [],
+          totalPages: 0,
+          currentPage: 1,
+          total: 0,
+          message: 'no_tokens_created'
+        });
+      }
     } else {
       // For all tokens view, sort by market cap
       sortOptions = { 'metadata.market_cap': -1 };
+      tokens = await Token.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit);
+      
+      total = await Token.countDocuments(query);
     }
 
-    console.log('Executing query:', query);
-    const tokens = await Token.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit);
-    
-    // Transform tokens to add isCreator flag
-    const tokensWithCreatorFlag = tokens.map(token => {
+    // If user is authenticated, check which tokens are saved
+    let userSavedTokens: string[] = [];
+    if (userId) {
+      const user = await User.findOne({ clerkUserId: userId });
+      userSavedTokens = user?.savedTokens || [];
+    }
+
+    // Transform tokens to add isSaved flag
+    const transformedTokens = tokens.map(token => {
       const tokenObj = token.toObject();
       return {
         ...tokenObj,
+        isSaved: userSavedTokens.includes(tokenObj.contractAddress),
         metadata: {
           ...tokenObj.metadata,
           isCreator: tokenObj.clerkUserId === userId
@@ -58,28 +100,13 @@ export async function GET(request: Request) {
       };
     });
 
-    console.log(`Found ${tokens.length} tokens`);
-
-    const total = await Token.countDocuments(query);
-
-    // If no tokens found in my-tokens view, return specific message
-    if (viewMode === 'my-tokens' && tokens.length === 0) {
-      return NextResponse.json({
-        tokens: [],
-        totalPages: 0,
-        currentPage: 1,
-        total: 0,
-        message: 'no_tokens_created',
-        redirectTo: '/dashboard/add-token'
-      });
-    }
-
     return NextResponse.json({
-      tokens: tokensWithCreatorFlag,
+      tokens: transformedTokens,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total
     });
+
   } catch (error) {
     console.error('Error fetching tokens:', error);
     return NextResponse.json({

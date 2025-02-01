@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Star, StarOff } from 'lucide-react';
+import { useState } from 'react';
 
 interface TokenDetailsProps {
   token: {
@@ -16,6 +17,7 @@ interface TokenDetailsProps {
     };
     contractAddress: string;
   };
+  onSaveToggle?: (newSavedState: boolean) => Promise<void>;
 }
 
 const formatNumber = (num: number) => {
@@ -28,7 +30,47 @@ const formatNumber = (num: number) => {
   return `$${num.toFixed(2)}`;
 };
 
-export default function TokenDetails({ token }: TokenDetailsProps) {
+export default function TokenDetails({ token, onSaveToggle }: TokenDetailsProps) {
+  const [isSaved, setIsSaved] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleSaveToggle = async () => {
+    if (isUpdating) return;
+    
+    try {
+      setIsUpdating(true);
+      const newSavedState = !isSaved;
+      
+      const response = await fetch('/api/user/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tokenAddress: token.contractAddress,
+          action: 'save',
+          remove: isSaved
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update saved status');
+      }
+
+      setIsSaved(newSavedState);
+      if (onSaveToggle) {
+        await onSaveToggle(newSavedState);
+      }
+    } catch (error) {
+      console.error('Error saving token:', error);
+      alert(error instanceof Error ? error.message : 'Failed to save token');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -64,6 +106,17 @@ export default function TokenDetails({ token }: TokenDetailsProps) {
             </div>
           </div>
         </div>
+        <button
+          onClick={handleSaveToggle}
+          disabled={isUpdating}
+          className={`p-2 rounded-lg transition-colors duration-300 ${
+            isSaved 
+              ? 'text-[#03E1FF] hover:text-[#03E1FF]/80' 
+              : 'text-gray-400 hover:text-[#03E1FF]'
+          }`}
+        >
+          {isSaved ? <Star className="w-6 h-6 fill-current" /> : <StarOff className="w-6 h-6" />}
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-6">

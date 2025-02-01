@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
 import {
@@ -12,14 +12,12 @@ import {
   Filler,
   Tooltip,
   Legend,
+  ChartOptions,
 } from 'chart.js';
-import { Sparkles, TrendingUp, TrendingDown, Clock, ChevronRight, Trash2, Crown, Shield, Star, StarOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { ChartData, ScriptableContext, TooltipItem } from 'chart.js';
-import { useSession } from '@clerk/nextjs';
-import type { ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import ReactionButton from './ReactionButton';
 
@@ -33,33 +31,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-// Define chart animations with more subtle effects
-const animations = {
-  y: {
-    easing: 'easeOutQuart',
-    duration: 1000,
-    from: (ctx: any) => {
-      if (ctx.type === 'data') {
-        if (ctx.mode === 'default' && !ctx.dropped) {
-          ctx.dropped = true;
-          return ctx.dataset.data[ctx.dataIndex];
-        }
-      }
-      return false;
-    }
-  }
-};
-
-const getChartBounds = (data: number[]) => {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const padding = (max - min) * 0.05;
-  return {
-    suggestedMin: min - padding,
-    suggestedMax: max + padding,
-  };
-};
 
 const timeframes = [
   { label: '1H', value: '1h' },
@@ -113,29 +84,14 @@ const generateChartData = (basePrice: number, dataPoints: number = 24) => {
   };
 };
 
-// Chart options types
-type ChartContext = {
-  type: string;
-  mode: string;
-  dropped?: boolean;
-  dataset: {
-    data: number[];
-  };
-  dataIndex: number;
-};
-
 export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
-  const { session } = useSession();
   const { userId } = useAuth(); 
   const isMyToken = userId && token.clerkUserId === userId;
   const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
-
   const router = useRouter();
 
-  const [isHovered, setIsHovered] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
-  const [isChartLoading, setIsChartLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
   const [isMobile, setIsMobile] = useState(false);
   const [reactionCounts, setReactionCounts] = useState<ReactionCounts>({
@@ -233,17 +189,17 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const maxPrice = Math.max(...prices);
   const priceMargin = (maxPrice - minPrice) * 0.05;
 
-  // Enhanced chart options with stable animations
-  const chartOptions = {
+  // Define chart options with proper types
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
       duration: 750,
-      easing: 'easeOutQuart' as const,
+      easing: 'easeOutQuart',
     },
     interaction: {
       intersect: false,
-      mode: 'nearest' as const,
+      mode: 'nearest',
     },
     plugins: {
       legend: {
@@ -258,7 +214,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         displayColors: false,
         titleFont: {
           size: 14,
-          weight: 'bold' as const,
+          weight: 'bold',
           family: 'Inter',
         },
         bodyFont: {
@@ -266,10 +222,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           family: 'Inter',
         },
         callbacks: {
-          label: function(context: TooltipItem<'line'>) {
+          label: function(context) {
             return `$${Number(context.parsed.y).toFixed(6)}`;
           },
-          title: function(context: TooltipItem<'line'>[]) {
+          title: function(context) {
             const value = context[0].parsed.x;
             if (selectedTimeframe === '1h') {
               return `${value}m ago`;
@@ -284,37 +240,41 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     },
     scales: {
       x: {
-        type: 'linear' as const,
+        type: 'linear',
         display: false,
         grid: {
           display: false,
         },
         ticks: {
           display: false,
-        },
-        min: 0,
-        callback: (value: number) => {
-          if (selectedTimeframe === '1h') {
-            return `${value}m`;
-          } else if (selectedTimeframe === '24h') {
-            return `${value}h`;
-          } else {
-            return `${value}d`;
-          }
+          maxRotation: 0,
+          padding: 8,
+          callback: function(tickValue) {
+            if (selectedTimeframe === '1h') {
+              return `${tickValue}m`;
+            } else if (selectedTimeframe === '24h') {
+              return `${tickValue}h`;
+            } else {
+              return `${tickValue}d`;
+            }
+          },
         },
       },
       y: {
-        type: 'linear' as const,
+        type: 'linear',
         display: false,
         grid: {
           display: false,
         },
         ticks: {
           display: false,
+          padding: 12,
+          callback: function(tickValue) {
+            return `$${Number(tickValue).toFixed(2)}`;
+          },
         },
         suggestedMin: minPrice - priceMargin,
         suggestedMax: maxPrice + priceMargin,
-        callback: (value: number) => `$${value.toFixed(2)}`,
       },
     },
     elements: {
@@ -331,9 +291,9 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
       line: {
         tension: 0.4,
         borderWidth: 2,
-        borderCapStyle: 'round' as const,
-        borderJoinStyle: 'round' as const,
-        cubicInterpolationMode: 'monotone' as const,
+        borderCapStyle: 'round',
+        borderJoinStyle: 'round',
+        cubicInterpolationMode: 'monotone',
       },
     },
   };
@@ -458,11 +418,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   };
 
   const handleTimeframeChange = async (timeframe: string) => {
-    setIsChartLoading(true);
+    setIsLoading(true);
     setSelectedTimeframe(timeframe);
     // Simulate loading state for demo
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsChartLoading(false);
+    setIsLoading(false);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -482,16 +442,53 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     }
   };
 
-  const handleSaveToggle = async () => {
+  const handleSaveToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent modal from opening
+    
+    if (!userId) {
+      alert('Please sign in to save tokens');
+      return;
+    }
+    
     try {
-      const response = await fetch(`/api/tokens/${token.contractAddress}/save`, {
-        method: isSaved ? 'DELETE' : 'POST',
+      const response = await fetch('/api/user/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include', // Important for Clerk authentication
+        body: JSON.stringify({
+          tokenAddress: token.contractAddress,
+          action: 'save',
+          remove: isSaved
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update saved status');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Only update the UI state if the server operation was successful
       setIsSaved(!isSaved);
+      
+      // Refresh the token list to reflect the changes
+      router.refresh();
     } catch (error) {
-      console.error('Error updating saved status:', error);
+      console.error('Error saving token:', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error,
+        tokenAddress: token.contractAddress,
+        userId
+      });
+      alert(error instanceof Error ? error.message : 'Failed to update saved status');
     }
   };
 
@@ -501,8 +498,6 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         className={`group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 ${
           isMobile ? 'p-3 min-w-[280px] snap-start' : 'p-4'
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Decorative Edges */}
         <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -511,10 +506,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Main content section that triggers modal */}
-        <div 
-          className="cursor-pointer"
-          onClick={() => setShowDetails(true)}
-        >
+        <div onClick={() => setShowDetails(true)}>
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3">
               <div className="relative">
@@ -589,85 +581,99 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           </div>
         </div>
 
-        {/* Stats section - no modal trigger */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-              {formatNumber(token.metadata.market_cap)}
-            </p>
+        {/* Stats and actions section - no modal trigger */}
+        <div onClick={(e) => e.stopPropagation()}>
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
+              <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                {formatNumber(token.metadata.market_cap)}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
+              <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                {formatNumber(token.metadata.volume_24h)}
+              </p>
+            </div>
           </div>
-          <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-              {formatNumber(token.metadata.volume_24h)}
-            </p>
-          </div>
-        </div>
 
-        {/* Contract address and reactions section - no modal trigger */}
-        <div className="space-y-2">
-          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-[#0A0F1F]/50 backdrop-blur-xl rounded-lg p-2 border border-gray-200 dark:border-[#03E1FF]/10 transition-colors duration-300">
-            <div className="flex items-center justify-between">
-              <span className="truncate group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors duration-300 max-w-[80%]">
-                {token.contractAddress}
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSaveToggle();
-                  }}
-                  className="p-1 text-gray-400 hover:text-[#03E1FF] rounded-lg transition-colors duration-300"
-                >
-                  {isSaved ? (
-                    <Star className="w-4 h-4 fill-current" />
-                  ) : (
-                    <StarOff className="w-4 h-4" />
-                  )}
-                </button>
-                {canDelete && (
+          {/* Contract address and buttons */}
+          <div className="space-y-2">
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-[#0A0F1F]/50 backdrop-blur-xl rounded-lg p-2 border border-gray-200 dark:border-[#03E1FF]/10 transition-colors duration-300">
+              <div className="flex items-center justify-between">
+                <span className="truncate group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors duration-300 max-w-[80%]">
+                  {token.contractAddress}
+                </span>
+                <div className="flex space-x-2">
                   <button
+                    type="button"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
-                      handleDelete(e);
+                      if (!userId) {
+                        alert('Please sign in to save tokens');
+                        return;
+                      }
+                      handleSaveToggle(e);
                     }}
-                    className="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300"
-                    title="Delete Token"
+                    className={`p-1 rounded-lg transition-colors duration-300 ${
+                      isSaved 
+                        ? 'text-[#03E1FF] hover:text-[#03E1FF]/80' 
+                        : 'text-gray-400 hover:text-[#03E1FF]'
+                    }`}
+                    title={isSaved ? 'Remove from saved' : 'Save token'}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {isSaved ? (
+                      <Star className="w-4 h-4 fill-current" />
+                    ) : (
+                      <StarOff className="w-4 h-4" />
+                    )}
                   </button>
-                )}
+                  {canDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(e);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300"
+                      title="Delete Token"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Reactions */}
-          {!isLoading && (
-            <div className="flex items-center justify-center space-x-2 pt-2">
-              <ReactionButton
-                tokenAddress={token.contractAddress}
-                type="rocket"
-                count={reactionCounts.rocket}
-                userReaction={userReaction}
-                onReact={handleReaction}
-              />
-              <ReactionButton
-                tokenAddress={token.contractAddress}
-                type="poop"
-                count={reactionCounts.poop}
-                userReaction={userReaction}
-                onReact={handleReaction}
-              />
-              <ReactionButton
-                tokenAddress={token.contractAddress}
-                type="like"
-                count={reactionCounts.like}
-                userReaction={userReaction}
-                onReact={handleReaction}
-              />
-            </div>
-          )}
+            {/* Reactions */}
+            {!isLoading && (
+              <div className="flex items-center justify-center space-x-2 pt-2">
+                <ReactionButton
+                  tokenAddress={token.contractAddress}
+                  type="rocket"
+                  count={reactionCounts.rocket}
+                  userReaction={userReaction}
+                  onReact={handleReaction}
+                />
+                <ReactionButton
+                  tokenAddress={token.contractAddress}
+                  type="poop"
+                  count={reactionCounts.poop}
+                  userReaction={userReaction}
+                  onReact={handleReaction}
+                />
+                <ReactionButton
+                  tokenAddress={token.contractAddress}
+                  type="like"
+                  count={reactionCounts.like}
+                  userReaction={userReaction}
+                  onReact={handleReaction}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
