@@ -16,30 +16,56 @@ export async function GET(request: Request) {
 
     await connectToDatabase();
 
-    // Get reaction counts
+    console.log('Getting reactions for token:', tokenAddress);
+
+    // Get reaction counts with proper type casting
     const counts = await Reaction.aggregate([
-      { $match: { tokenAddress } },
-      { $group: { _id: '$type', count: { $sum: 1 } } }
+      { 
+        $match: { 
+          tokenAddress,
+          reactionType: { $in: ['rocket', 'poop', 'like'] }
+        } 
+      },
+      { 
+        $group: { 
+          _id: '$reactionType', 
+          count: { $sum: 1 } 
+        } 
+      }
     ]);
 
-    // Format counts
+    console.log('Raw counts:', counts);
+
+    // Initialize counts with zeros
     const formattedCounts = {
       rocket: 0,
       poop: 0,
       like: 0,
     };
+
+    // Update counts from aggregation
     counts.forEach(({ _id, count }) => {
-      formattedCounts[_id] = count;
+      if (_id in formattedCounts) {
+        formattedCounts[_id] = count;
+      }
     });
+
+    console.log('Formatted counts:', formattedCounts);
 
     // If userId is provided, get user's reaction
     let userReaction = null;
     if (userId) {
-      const reaction = await Reaction.findOne({ tokenAddress, clerkUserId: userId });
+      const reaction = await Reaction.findOne({ 
+        tokenAddress, 
+        clerkUserId: userId,
+        reactionType: { $in: ['rocket', 'poop', 'like'] }
+      });
       if (reaction) {
-        userReaction = reaction.type;
+        userReaction = reaction.reactionType;
       }
     }
+
+    console.log('Final response:', { counts: formattedCounts, userReaction });
 
     return NextResponse.json({
       counts: formattedCounts,
@@ -64,6 +90,7 @@ export async function POST(request: Request) {
     }
 
     const { tokenAddress, type } = await request.json();
+    console.log('Adding/updating reaction:', { tokenAddress, type, userId });
 
     if (!tokenAddress || !type) {
       return NextResponse.json(
@@ -81,43 +108,87 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    // Remove existing reaction if any
-    await Reaction.deleteOne({ tokenAddress, clerkUserId: userId });
-
-    // Add new reaction
-    const reaction = new Reaction({
+    // First try to find an existing reaction
+    const existingReaction = await Reaction.findOne({
       tokenAddress,
-      clerkUserId: userId,
-      type,
+      clerkUserId: userId
     });
 
-    await reaction.save();
+    console.log('Existing reaction:', existingReaction);
 
-    // Get updated counts
+    if (existingReaction) {
+      // If the same reaction type, remove it (toggle off)
+      if (existingReaction.reactionType === type) {
+        await existingReaction.deleteOne();
+        console.log('Removed existing reaction');
+      } else {
+        // If different reaction type, update it
+        existingReaction.reactionType = type;
+        await existingReaction.save();
+        console.log('Updated reaction type');
+      }
+    } else {
+      // Create new reaction
+      const reaction = new Reaction({
+        tokenAddress,
+        clerkUserId: userId,
+        reactionType: type
+      });
+      await reaction.save();
+      console.log('Created new reaction');
+    }
+
+    // Get updated counts with proper type filtering
     const counts = await Reaction.aggregate([
-      { $match: { tokenAddress } },
-      { $group: { _id: '$type', count: { $sum: 1 } } }
+      { 
+        $match: { 
+          tokenAddress,
+          reactionType: { $in: ['rocket', 'poop', 'like'] }
+        } 
+      },
+      { 
+        $group: { 
+          _id: '$reactionType', 
+          count: { $sum: 1 } 
+        } 
+      }
     ]);
+
+    console.log('Updated counts:', counts);
 
     const formattedCounts = {
       rocket: 0,
       poop: 0,
       like: 0,
     };
+
     counts.forEach(({ _id, count }) => {
-      formattedCounts[_id] = count;
+      if (_id in formattedCounts) {
+        formattedCounts[_id] = count;
+      }
     });
 
-    return NextResponse.json({
-      message: 'Reaction added successfully',
-      counts: formattedCounts,
-      userReaction: type
+    // Get the user's current reaction after update
+    const currentReaction = await Reaction.findOne({
+      tokenAddress,
+      clerkUserId: userId,
+      reactionType: { $in: ['rocket', 'poop', 'like'] }
     });
+
+    const response = {
+      message: 'Reaction updated successfully',
+      counts: formattedCounts,
+      userReaction: currentReaction?.reactionType || null
+    };
+
+    console.log('Final response:', response);
+
+    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Error adding reaction:', error);
+    console.error('Error updating reaction:', error);
     return NextResponse.json(
-      { message: 'Error adding reaction' },
+      { message: 'Error updating reaction' },
       { status: 500 }
     );
   }
@@ -148,7 +219,7 @@ export async function DELETE(request: Request) {
     // Get updated counts
     const counts = await Reaction.aggregate([
       { $match: { tokenAddress } },
-      { $group: { _id: '$type', count: { $sum: 1 } } }
+      { $group: { _id: '$reactionType', count: { $sum: 1 } } }
     ]);
 
     const formattedCounts = {

@@ -162,10 +162,13 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
 
   const fetchReactions = async () => {
     try {
+      console.log('Fetching reactions for token:', token.contractAddress);
       const response = await fetch(
         `/api/reactions?tokenAddress=${token.contractAddress}${userId ? `&userId=${userId}` : ''}`
       );
+      console.log('Fetch reactions response status:', response.status);
       const data = await response.json();
+      console.log('Fetch reactions data:', data);
       setReactionCounts(data.counts);
       setUserReaction(data.userReaction);
     } catch (error) {
@@ -177,6 +180,14 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
 
   const handleReaction = async (type: string) => {
     try {
+      console.log('Handling reaction in TokenCard:', {
+        type,
+        tokenAddress: token.contractAddress,
+        currentCounts: reactionCounts,
+        userReaction
+      });
+
+      // Make the API call
       const response = await fetch('/api/reactions', {
         method: 'POST',
         headers: {
@@ -188,11 +199,21 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Failed to update reaction');
+      }
+
       const data = await response.json();
+      console.log('Reaction response:', data);
+
+      // Update the local state with the response data
       setReactionCounts(data.counts);
       setUserReaction(data.userReaction);
+
     } catch (error) {
-      console.error('Error adding reaction:', error);
+      console.error('Error handling reaction:', error);
+      // Fetch the current state again in case of error
+      await fetchReactions();
     }
   };
 

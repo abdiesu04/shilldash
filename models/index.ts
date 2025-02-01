@@ -102,19 +102,21 @@ const reactionSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  reactionType: { 
+  type: {
     type: String, 
     required: true,
+    enum: ['rocket', 'poop', 'like'],
     index: true,
   },
-  timestamp: { 
+  createdAt: {
     type: Date, 
     default: Date.now,
     index: true,
   }
-}, {
-  timestamps: true
 });
+
+// Ensure one reaction per user per token
+reactionSchema.index({ tokenAddress: 1, clerkUserId: 1 }, { unique: true });
 
 // Compound indexes for common query patterns
 tokenSchema.index({ clerkUserId: 1, contractAddress: 1 });
@@ -126,10 +128,6 @@ tokenSchema.index({ lastUpdated: -1, price: -1 });
 userSchema.index({ clerkUserId: 1, 'savedTokens': 1 });
 userSchema.index({ clerkUserId: 1, 'addedTokens': 1 });
 userSchema.index({ email: 1, clerkUserId: 1 });
-
-reactionSchema.index({ tokenAddress: 1, reactionType: 1 });
-reactionSchema.index({ clerkUserId: 1, timestamp: -1 });
-reactionSchema.index({ tokenAddress: 1, timestamp: -1 });
 
 // Create models
 export const Token = mongoose.models.Token || mongoose.model('Token', tokenSchema);

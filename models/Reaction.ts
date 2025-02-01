@@ -11,7 +11,7 @@ const reactionSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  type: {
+  reactionType: {
     type: String,
     enum: ['rocket', 'poop', 'like'],
     required: true,
@@ -19,13 +19,11 @@ const reactionSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    index: true,
-  },
+  }
 });
 
 // Ensure one reaction per user per token
 reactionSchema.index({ tokenAddress: 1, clerkUserId: 1 }, { unique: true });
 
-const Reaction = mongoose.models.Reaction || mongoose.model('Reaction', reactionSchema);
-
+export const Reaction = mongoose.models.Reaction || mongoose.model('Reaction', reactionSchema);
 export default Reaction; 
