@@ -3,25 +3,23 @@
 import { Plus, Sparkles, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth, SignInButton } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 
 interface EmptyTokenGridProps {
   message?: string;
   actionLabel?: string;
-  actionUrl?: string;
+  onAction?: () => void;
 }
 
 export default function EmptyTokenGrid({ 
   message = "You haven't created any tokens yet",
   actionLabel = "Create Your First Token",
-  actionUrl = "/dashboard/add-token"
+  onAction
 }: EmptyTokenGridProps) {
   const { isSignedIn } = useAuth();
-  const router = useRouter();
 
   const handleAction = () => {
-    if (actionUrl) {
-      router.push(actionUrl);
+    if (onAction) {
+      onAction();
     }
   };
 
@@ -30,7 +28,8 @@ export default function EmptyTokenGrid({
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="group relative w-64 h-64 bg-[#0A0F1F]/60 backdrop-blur-xl rounded-2xl border border-[#03E1FF]/20 overflow-hidden"
+        className="group relative w-64 h-64 bg-[#0A0F1F]/60 backdrop-blur-xl rounded-2xl border border-[#03E1FF]/20 overflow-hidden cursor-pointer"
+        onClick={handleAction}
       >
         {/* Background animations */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 opacity-0 group-hover:opacity-100 transition-all duration-700" />
@@ -38,10 +37,7 @@ export default function EmptyTokenGrid({
         
         {/* Content */}
         {isSignedIn ? (
-          <button
-            onClick={handleAction}
-            className="relative h-full w-full flex flex-col items-center justify-center p-6 space-y-4"
-          >
+          <div className="relative h-full w-full flex flex-col items-center justify-center p-6 space-y-4">
             <div className="relative">
               <div className="absolute inset-0 bg-[#03E1FF] rounded-full animate-ping opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
               <div className="relative bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] p-4 rounded-full">
@@ -57,7 +53,7 @@ export default function EmptyTokenGrid({
                 {message}
               </p>
             </div>
-          </button>
+          </div>
         ) : (
           <SignInButton mode="modal">
             <button className="relative h-full w-full flex flex-col items-center justify-center p-6 space-y-4 cursor-pointer">
