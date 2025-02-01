@@ -1,9 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'coin-images.coingecko.com',
-      'assets.coingecko.com'
+    domains: ['*'],
+    unoptimized: true,
+    dangerouslyAllowSVG: true,
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: '*',
+      },
+      {
+        protocol: 'https',
+        hostname: '*',
+      },
     ],
   },
 }

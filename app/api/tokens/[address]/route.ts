@@ -1,124 +1,42 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
-
-interface TokenData {
-  _id: string;
-  contractAddress: string;
-  name: string;
-  symbol: string;
-  logo: string;
-  price: number;
-  metadata: {
-    market_cap: number;
-    volume_24h: number;
-    price_change_24h: number;
-  };
-  clerkUserId: string;
-  lastUpdated: Date;
-}
-
-interface ChartDataPoint {
-  labels: string[];
-  prices: number[];
-}
+import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
 export async function GET(
   request: Request,
   { params }: { params: { address: string } }
 ) {
   try {
+    // Connect to database
     await connectToDatabase();
-    
-    // Generate time ranges for different periods
-    const now = Date.now();
-    const timeRanges = {
-      '24h': {
-        start: now - 24 * 60 * 60 * 1000,
-        points: 24,
-        format: (date: Date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      },
-      '7d': {
-        start: now - 7 * 24 * 60 * 60 * 1000,
-        points: 7 * 24,
-        format: (date: Date) => date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-      },
-      '30d': {
-        start: now - 30 * 24 * 60 * 60 * 1000,
-        points: 30,
-        format: (date: Date) => date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-      }
-    };
 
-    // Find token data
-    const tokenDoc = await Token.findOne({ contractAddress: params.address }).lean();
-    if (!tokenDoc) {
+    // Get the address from params
+    const address = await Promise.resolve(params.address);
+    if (!address) {
       return NextResponse.json(
-        { message: 'Token not found' },
-        { status: 404 }
+        { error: 'Token address is required' },
+        { status: 400 }
       );
     }
 
-    // Cast the document to our expected type
-    const token = tokenDoc as unknown as TokenData;
-
-    // Generate chart data for each time range
-    const chartData: Record<string, ChartDataPoint> = {};
-    const basePrice = token.price;
-    
-    for (const [period, range] of Object.entries(timeRanges)) {
-      const { start, points, format } = range;
-      const interval = (now - start) / points;
+    try {
+      // Fetch token data from Solana blockchain and market APIs
+      const tokenData = await fetchTokenData(address);
       
-      const data: ChartDataPoint = {
-        labels: [],
-        prices: [],
-      };
-
-      // Generate price points with some randomness based on current price
-      const volatility = basePrice * (period === '24h' ? 0.05 : period === '7d' ? 0.15 : 0.25);
-      let lastPrice = basePrice;
-
-      for (let i = 0; i <= points; i++) {
-        const timestamp = new Date(start + interval * i);
-        data.labels.push(format(timestamp));
-        
-        // Generate more realistic price movements
-        const change = (Math.random() - 0.45) * volatility; // Slight upward bias
-        lastPrice = Math.max(0, lastPrice + change); // Prevent negative prices
-        data.prices.push(lastPrice);
-      }
-
-      // Ensure the last point matches the current price
-      data.labels.push(format(new Date(now)));
-      data.prices.push(basePrice);
-
-      chartData[period] = data;
+      // Return the token data
+      return NextResponse.json(tokenData);
+    } catch (error) {
+      console.error('Error fetching token data:', error);
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Failed to fetch token data' },
+        { status: 404 }
+      );
     }
-
-    // Calculate additional statistics
-    const priceHigh = Math.max(...chartData['24h'].prices);
-    const priceLow = Math.min(...chartData['24h'].prices);
-    const priceChange = basePrice - chartData['24h'].prices[0];
-    const priceChangePercentage = (priceChange / chartData['24h'].prices[0]) * 100;
-
-    return NextResponse.json({
-      token: {
-        ...token,
-        chartData,
-        statistics: {
-          high_24h: priceHigh,
-          low_24h: priceLow,
-          price_change_24h: priceChange,
-          price_change_percentage_24h: priceChangePercentage,
-          updated_at: new Date(now).toISOString()
-        }
-      },
-    });
   } catch (error) {
-    console.error('Error fetching token:', error);
+    console.error('API error:', error);
     return NextResponse.json(
-      { message: 'Error fetching token details' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -131,24 +49,31 @@ export async function DELETE(
   try {
     await connectToDatabase();
 
+    const address = await Promise.resolve(params.address);
+    if (!address) {
+      return NextResponse.json(
+        { error: 'Token address is required' },
+        { status: 400 }
+      );
+    }
+
     // Find and delete the token
-    const result = await Token.findOneAndDelete({ contractAddress: params.address });
+    const result = await Token.findOneAndDelete({ contractAddress: address });
 
     if (!result) {
       return NextResponse.json(
-        { message: 'Token not found' },
+        { error: 'Token not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { message: 'Token deleted successfully' },
-      { status: 200 }
+      { message: 'Token deleted successfully' }
     );
   } catch (error) {
     console.error('Error deleting token:', error);
     return NextResponse.json(
-      { message: 'Error deleting token' },
+      { error: 'Failed to delete token' },
       { status: 500 }
     );
   }

@@ -2,79 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
-import axios from 'axios';
-import { mockTokenData } from '@/utils/mockTokenData';
-
-const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
-
-async function getTokenInfo(contractAddress: string) {
-  try {
-    // Check if mock data exists for this token
-    if (mockTokenData[contractAddress]) {
-      console.log('Using mock data for token:', contractAddress);
-      return mockTokenData[contractAddress];
-    }
-
-    console.log('No mock data found, fetching from API for token:', contractAddress);
-    
-    // Get price and market data
-    const priceResponse = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/token_price/solana`,
-      {
-        params: {
-          contract_addresses: contractAddress,
-          vs_currencies: 'usd',
-          include_24hr_vol: true,
-          include_24hr_change: true,
-          include_market_cap: true
-        },
-        headers: {
-          'x-cg-demo-api-key': COINGECKO_API_KEY
-        }
-      }
-    );
-
-    const tokenData = priceResponse.data[contractAddress];
-    if (!tokenData) {
-      throw new Error('Token not found');
-    }
-
-    // Get additional token info
-    const infoResponse = await axios.get(
-      `https://api.coingecko.com/api/v3/coins/solana/contract/${contractAddress}`,
-      {
-        headers: {
-          'x-cg-demo-api-key': COINGECKO_API_KEY
-        }
-      }
-    );
-
-    return {
-      name: infoResponse.data.name,
-      symbol: infoResponse.data.symbol.toUpperCase(),
-      logo: infoResponse.data.image?.large,
-      price: tokenData.usd,
-      metadata: {
-        market_cap: tokenData.usd_market_cap,
-        volume_24h: tokenData.usd_24h_vol,
-        price_change_24h: tokenData.usd_24h_change
-      }
-    };
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Error fetching token info:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        message: error.message
-      });
-    } else {
-      console.error('Error fetching token info:', error);
-    }
-    throw new Error('Failed to fetch token information');
-  }
-}
+import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
 export async function POST(request: Request) {
   try {
@@ -86,13 +14,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { contractAddress } = await request.json();
+    const { contractAddress, description } = await request.json();
     console.log('Contract address received:', contractAddress);
 
-    // Fetch token info
+    // Fetch token info using our solanaTokenUtils
     console.log('Fetching token info...');
-    const tokenInfo = await getTokenInfo(contractAddress);
-    console.log('Token info received:', tokenInfo);
+    const tokenData = await fetchTokenData(contractAddress);
+    console.log('Token info received:', tokenData);
 
     // Connect to database
     console.log('Using cached database connection');
@@ -104,15 +32,32 @@ export async function POST(request: Request) {
       clerkUserId: userId
     });
 
+    const tokenInfo = {
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      logo: tokenData.logo,
+      price: Number(tokenData.price),
+      metadata: {
+        market_cap: Number(tokenData.metadata.market_cap) || 0,
+        volume_24h: Number(tokenData.metadata.volume_24h.h24) || 0,
+        price_change_24h: Number(tokenData.metadata.price_change_24h.h24) || 0,
+        liquidity: Number(tokenData.metadata.liquidity) || 0,
+      },
+      onChainData: tokenData.onChainData,
+      description: description || '',
+      urls: tokenData.urls,
+      lastUpdated: new Date()
+    };
+
     if (existingToken) {
       // Update existing token
       console.log('Updating existing token...');
-      Object.assign(existingToken, {
-        ...tokenInfo,
-        lastUpdated: new Date()
-      });
+      Object.assign(existingToken, tokenInfo);
       await existingToken.save();
-      return NextResponse.json({ message: 'Token updated successfully' });
+      return NextResponse.json({ 
+        message: 'Token updated successfully',
+        token: existingToken
+      });
     }
 
     // Create new token
@@ -136,10 +81,6 @@ export async function POST(request: Request) {
 
     if (error instanceof Error) {
       errorMessage = error.message;
-      if (axios.isAxiosError(error)) {
-        statusCode = error.response?.status || 500;
-        errorMessage = error.response?.data?.error || error.message;
-      }
     }
 
     return NextResponse.json({

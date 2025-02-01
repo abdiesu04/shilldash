@@ -20,21 +20,59 @@ const tokenSchema = new mongoose.Schema({
     required: true,
   },
   price: {
-    type: Number,
+    type: mongoose.Schema.Types.Mixed,
     required: true,
   },
   metadata: {
     market_cap: {
       type: Number,
       required: true,
+      default: 0,
     },
-    volume_24h: {
+    volume_24h: mongoose.Schema.Types.Mixed,
+    price_change_24h: mongoose.Schema.Types.Mixed,
+    liquidity: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+      default: 0,
+    },
+  },
+  onChainData: {
+    supply: {
+      type: String,
+      required: true,
+    },
+    decimals: {
       type: Number,
       required: true,
     },
-    price_change_24h: {
-      type: Number,
+    mintAuthority: {
+      type: String,
+      default: null,
+    },
+    freezeAuthority: {
+      type: String,
+      default: null,
+    },
+    isInitialized: {
+      type: Boolean,
       required: true,
+    },
+  },
+  description: {
+    type: String,
+    default: '',
+  },
+  urls: {
+    explorers: {
+      solscan: String,
+      solanaFM: String,
+      explorer: String,
+    },
+    trading: {
+      raydium: String,
+      jupiter: String,
+      orca: String,
     },
   },
   clerkUserId: {
@@ -51,6 +89,9 @@ const tokenSchema = new mongoose.Schema({
 // Create compound index for user's tokens
 tokenSchema.index({ clerkUserId: 1, contractAddress: 1 });
 
-const Token = mongoose.models.Token || mongoose.model('Token', tokenSchema);
+// Clear existing model if it exists to prevent OverwriteModelError
+mongoose.models = {};
+
+const Token = mongoose.model('Token', tokenSchema);
 
 export default Token; 
