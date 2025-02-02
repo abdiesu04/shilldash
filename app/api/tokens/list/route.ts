@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: Request) {
   try {
@@ -9,14 +10,18 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const viewMode = searchParams.get('view') || 'all';
     const skip = (page - 1) * limit;
+    const { userId } = await auth();
 
     await connectToDatabase();
 
     let query = {};
     let sortOptions = {};
 
-    // If viewing user's tokens, add the clerkId filter
+    // If viewing user's tokens, add the userId filter
     if (viewMode === 'my-tokens') {
+      if (!userId) {
+        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      }
       query = { clerkUserId: userId };
     }
 

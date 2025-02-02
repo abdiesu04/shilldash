@@ -73,10 +73,7 @@ export default function Dashboard() {
         return;
       }
 
-      let url = `/api/tokens/list?page=${page}&limit=9`;
-      if (viewMode === 'my-tokens' && isSignedIn) {
-        url += `&userId=${userId}`;
-      }
+      let url = `/api/tokens/list?page=${page}&limit=9&view=${viewMode}`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -187,8 +184,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0F1F] pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0F1F]">
+      <div className="container mx-auto px-4 py-8">
         {/* Header Section with Premium Styling */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 blur-3xl" />
@@ -241,56 +238,83 @@ export default function Dashboard() {
                   />
                 ))}
               </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-500">{error}</p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
-                  {/* Add Token Card - Always First */}
-                  <div className="transform transition-all duration-500 hover:z-10">
-                    <div
-                      onClick={() => setShowAddToken(true)}
-                      className="group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer h-full"
-                    >
-                      <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      
-                      <div className="flex flex-col items-center justify-center h-full space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                          <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-                            Add New Token
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
-                            Track and manage your favorite tokens
-                          </p>
+                  {/* Add Token Card - Always First in My Tokens view */}
+                  {viewMode === 'my-tokens' && (
+                    <div className="transform transition-all duration-500 hover:z-10">
+                      <div
+                        onClick={() => setShowAddToken(true)}
+                        className="group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer h-full"
+                      >
+                        <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        <div className="flex flex-col items-center justify-center h-full space-y-4">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                            <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
+                          </div>
+                          <div className="text-center">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                              Add New Token
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
+                              Track and manage your favorite tokens
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Existing Token Cards */}
-                  {tokens.map((token, index) => (
-                    <div
-                      key={token.contractAddress}
-                      className="transform transition-all duration-500 hover:z-10"
-                      style={{
-                        animationDelay: `${(index + 1) * 100}ms`,
-                      }}
-                    >
-                      <TokenCard
-                        token={token}
-                        onDelete={handleDeleteToken}
-                        showDeleteButton={viewMode === 'my-tokens'}
-                      />
+                  {tokens.length === 0 && viewMode === 'my-tokens' ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-6">
+                        <Inbox className="w-10 h-10 text-[#03E1FF]" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        No Tokens Added Yet
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+                        Start by adding your first token. You can track and manage all your tokens from here.
+                      </p>
+                      <button
+                        onClick={() => setShowAddToken(true)}
+                        className="px-6 py-3 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg text-white font-medium hover:opacity-90 transition-opacity duration-300"
+                      >
+                        Add Your First Token
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    tokens.map((token, index) => (
+                      <div
+                        key={token.contractAddress}
+                        className="transform transition-all duration-500 hover:z-10"
+                        style={{
+                          animationDelay: `${(index + 1) * 100}ms`,
+                        }}
+                      >
+                        <TokenCard
+                          token={token}
+                          onDelete={handleDeleteToken}
+                          showDeleteButton={viewMode === 'my-tokens'}
+                        />
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* Enhanced Pagination */}
-                {totalPages > 1 && (
+                {totalPages > 1 && tokens.length > 0 && (
                   <div className="mt-8 flex justify-center">
                     <div className="inline-flex items-center bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-[#03E1FF]/20">
                       <button
@@ -300,19 +324,9 @@ export default function Dashboard() {
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      {[...Array(totalPages)].map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setPage(i + 1)}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-300 ${
-                            page === i + 1
-                              ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-white shadow-[0_0_20px_-12px_rgba(0,255,163,0.5)]'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
+                      <span className="px-4 text-sm text-gray-400">
+                        Page {page} of {totalPages}
+                      </span>
                       <button
                         onClick={() => setPage(Math.min(totalPages, page + 1))}
                         disabled={page === totalPages}
@@ -336,7 +350,38 @@ export default function Dashboard() {
         title="Add New Token"
         size="md"
       >
-        <AddTokenForm onSuccess={() => setShowAddToken(false)} />
+        <AddTokenForm onSuccess={() => {
+          setShowAddToken(false);
+          fetchTokens(); // Refresh the tokens list after adding
+        }} />
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmDialog}
+        onClose={handleCancelDelete}
+        title="Delete Token"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete this token? This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={handleCancelDelete}
+              className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors duration-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => tokenToDelete && handleDeleteToken(tokenToDelete)}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-300"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

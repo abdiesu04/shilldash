@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
 import {
@@ -13,7 +13,7 @@ import {
   Scale,
   CoreScaleOptions,
 } from 'chart.js';
-import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff, Copy, Check } from 'lucide-react';
 import Modal from '../ui/Modal';
 import type { ChartData, ScriptableContext } from 'chart.js';
 import { useAuth } from '@clerk/nextjs';
@@ -83,37 +83,40 @@ interface ChartCallbackType {
   };
 }
 
+// Format large numbers in a readable way
+const formatLargeNumber = (num: number): string => {
+  if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+  if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+  if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+  return `$${num.toFixed(2)}`;
+};
+
+// Format price based on its value
+const formatPrice = (price: number): string => {
+  if (price < 0.00001) return price.toExponential(2);
+  if (price < 0.01) return price.toFixed(6);
+  if (price < 1) return price.toFixed(4);
+  if (price < 10000) return price.toFixed(2);
+  return formatLargeNumber(price);
+};
+
+// Format token name to fit in the card
+const formatTokenName = (name: string): string => {
+  if (name.length > 20) {
+    return name.slice(0, 18) + '...';
+  }
+  return name;
+};
+
 export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
   const { userId } = useAuth();
   const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
   const isMyToken = userId && token.clerkUserId === userId;
 
-  const [isHovered, setIsHovered] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const formatNumber = (num: number) => {
-    if (num >= 1e9) {
-      return `$${(num / 1e9).toFixed(2)}B`;
-    }
-    if (num >= 1e6) {
-      return `$${(num / 1e6).toFixed(2)}M`;
-    }
-    return `$${num.toFixed(2)}`;
-  };
+  const [copied, setCopied] = useState(false);
 
   const prices = token.chartData?.prices || generateChartData(token.price).prices;
   const minPrice = Math.min(...prices);
@@ -358,7 +361,8 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     }
   };
 
-  const handleSaveToggle = async () => {
+  const handleSaveToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const response = await fetch(`/api/tokens/${token.contractAddress}/save`, {
         method: isSaved ? 'DELETE' : 'POST',
@@ -371,27 +375,34 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     }
   };
 
-  return (
-    <>
-      <div
-        className={`group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 ${
-          isMobile ? 'p-3 min-w-[280px] snap-start' : 'p-4'
-        } cursor-pointer transform ${
-          isHovered ? 'scale-[1.02] shadow-[0_0_30px_-12px_rgba(0,255,163,0.3)]' : ''
-        }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={() => setShowDetails(true)}
-      >
-        {/* Decorative Edges */}
-        <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+  const handleCopyAddress = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(token.contractAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+  return (
+    <div
+      onClick={() => setShowDetails(true)}
+      className="group relative w-full h-[320px] p-4 bg-white dark:bg-[#0A0F1F] rounded-xl border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
+    >
+      {/* Decorative Edges */}
+      <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+      {/* Main Content Container */}
+      <div className="flex flex-col h-full">
+        {/* Token Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3 max-w-[70%]">
+            <div className="relative flex-shrink-0">
               <Image
                 src={token.logo}
                 alt={`${token.name} logo`}
@@ -407,13 +418,13 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                 </div>
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-                  {token.name}
+                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
+                  {formatTokenName(token.name)}
                 </h3>
                 {isMyToken && (
-                  <div className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20 shadow-[0_0_30px_-15px_rgba(0,255,163,0.3)] group/badge">
+                  <div className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20">
                     <div className="flex items-center space-x-1">
                       <Crown className="w-3 h-3 text-[#03E1FF]" />
                       <span className="text-[10px] font-medium text-[#03E1FF]">Creator</span>
@@ -421,14 +432,14 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                 {token.symbol}
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-              ${token.price < 0.01 ? token.price.toFixed(8) : token.price.toFixed(2)}
+          <div className="text-right flex-shrink-0">
+            <p className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 text-base">
+              {formatPrice(token.price)}
             </p>
             <div className={`flex items-center justify-end space-x-1 text-xs ${
               token.metadata.price_change_24h >= 0
@@ -440,57 +451,77 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
               ) : (
                 <TrendingDown className="w-3 h-3" />
               )}
-              <span className="font-medium">
+              <span className="font-medium whitespace-nowrap">
                 {Math.abs(token.metadata.price_change_24h).toFixed(2)}%
               </span>
             </div>
           </div>
         </div>
 
-        {/* Mini Chart */}
-        <div className="relative h-[60px] mb-3 group">
+        {/* Chart Section */}
+        <div className="relative h-[80px] mb-4">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
             <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 animate-pulse" />
           </div>
-          <div className="relative h-full transform transition-transform duration-500 group-hover:scale-[1.02]">
-            <Line 
-              options={chartOptions} 
-              data={chartData}
-              className="transition-opacity duration-500 group-hover:opacity-90"
-            />
-          </div>
+          <Line 
+            options={chartOptions} 
+            data={chartData}
+            className="transition-opacity duration-500 group-hover:opacity-90"
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
             <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-              {formatNumber(token.metadata.market_cap)}
+            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
+              {formatLargeNumber(token.metadata.market_cap)}
             </p>
           </div>
-          <div className="p-2 rounded-lg bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-500">
+          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
             <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-              {formatNumber(token.metadata.volume_24h)}
+            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
+              {formatLargeNumber(token.metadata.volume_24h)}
             </p>
           </div>
         </div>
 
-        {/* Footer section with contract address and buttons */}
-        <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-[#0A0F1F]/50 backdrop-blur-xl rounded-lg p-2 border border-gray-200 dark:border-[#03E1FF]/10 transition-colors duration-300">
-          <span className="truncate group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors duration-300 max-w-[80%]">
-            {token.contractAddress}
-          </span>
-          <div className="flex space-x-2">
+        {/* Address Section - Now part of the main content flow */}
+        <div className="mt-auto space-y-2">
+          {/* Contract Address */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono truncate">
+                {token.contractAddress}
+              </span>
+              <button
+                onClick={handleCopyAddress}
+                className="flex-shrink-0 p-1 hover:bg-white/10 rounded-md transition-colors duration-300"
+                title="Copy Address"
+              >
+                {copied ? (
+                  <Check className="w-3 h-3 text-[#00FFA3]" />
+                ) : (
+                  <Copy className="w-3 h-3 text-gray-400 hover:text-[#03E1FF]" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Actions Row */}
+          <div className="flex items-center justify-end space-x-2 p-2">
             <button
-              onClick={handleSaveToggle}
-              className="p-2 text-gray-400 hover:text-[#03E1FF] rounded-lg transition-colors duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSaveToggle(e);
+              }}
+              className="p-1.5 text-gray-400 hover:text-[#03E1FF] rounded-lg transition-colors duration-300 hover:bg-white/5"
             >
               {isSaved ? (
-                <Star className="w-5 h-5 fill-current" />
+                <Star className="w-4 h-4 fill-current" />
               ) : (
-                <StarOff className="w-5 h-5" />
+                <StarOff className="w-4 h-4" />
               )}
             </button>
             {canDelete && (
@@ -499,33 +530,21 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                   e.stopPropagation();
                   handleDelete(e);
                 }}
-                className="p-2 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300"
+                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300 hover:bg-white/5"
                 title="Delete Token"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
       </div>
 
+      {/* Token Details Modal */}
       <Modal
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
-        title={
-          <div className="flex items-center justify-between w-full">
-            <span>{`${token.name} (${token.symbol})`}</span>
-            {canDelete && (
-              <button
-                onClick={handleDelete}
-                className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-300"
-                title="Delete Token"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        }
+        title={token.name}
         size="lg"
       >
         <div className="space-y-6">
@@ -613,6 +632,6 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
           }
         }
       `}</style>
-    </>
+    </div>
   );
 }
