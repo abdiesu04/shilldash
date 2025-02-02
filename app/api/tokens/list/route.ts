@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
-import { Token } from '@/models';
+import { Token, User } from '@/models';
 import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: Request) {
@@ -25,6 +25,18 @@ export async function GET(request: Request) {
       query = { clerkUserId: userId };
     }
 
+    // If viewing saved tokens, get user's saved tokens
+    if (viewMode === 'saved') {
+      if (!userId) {
+        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      }
+      const user = await User.findOne({ clerkUserId: userId });
+      if (!user) {
+        return NextResponse.json({ message: 'User not found' }, { status: 404 });
+      }
+      query = { contractAddress: { $in: user.savedTokens } };
+    }
+
     // Sort by price change for trending view
     if (viewMode === 'trending' || viewMode === 'all') {
       sortOptions = { 'metadata.price_change_24h': -1 }; // -1 for descending order
@@ -39,8 +51,23 @@ export async function GET(request: Request) {
 
     const total = await Token.countDocuments(query);
 
+    // If user is logged in, get their saved tokens to mark saved status
+    let savedTokens: string[] = [];
+    if (userId) {
+      const user = await User.findOne({ clerkUserId: userId });
+      if (user) {
+        savedTokens = user.savedTokens || [];
+      }
+    }
+
+    // Add isSaved property to each token
+    const tokensWithSavedStatus = tokens.map(token => ({
+      ...token.toObject(),
+      isSaved: savedTokens.includes(token.contractAddress)
+    }));
+
     return NextResponse.json({
-      tokens,
+      tokens: tokensWithSavedStatus,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total

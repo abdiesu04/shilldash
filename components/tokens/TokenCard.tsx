@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
 import {
@@ -17,6 +17,7 @@ import { TrendingUp, TrendingDown, Trash2, Crown, Star, StarOff, Copy, Check } f
 import Modal from '../ui/Modal';
 import type { ChartData, ScriptableContext } from 'chart.js';
 import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 // Register Chart.js plugins
 ChartJS.register(
@@ -110,6 +111,7 @@ const formatTokenName = (name: string): string => {
 
 export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCardProps) {
   const { userId } = useAuth();
+  const router = useRouter();
   const canDelete = showDeleteButton && userId && token.clerkUserId === userId;
   const isMyToken = userId && token.clerkUserId === userId;
 
@@ -117,6 +119,13 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
   const [isSaved, setIsSaved] = useState(token.isSaved || false);
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Update saved state when token.isSaved changes
+    setIsSaved(token.isSaved || false);
+  }, [token.isSaved]);
 
   const prices = token.chartData?.prices || generateChartData(token.price).prices;
   const minPrice = Math.min(...prices);
@@ -363,15 +372,34 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
 
   const handleSaveToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!userId) {
+      router.push('/sign-in');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
     try {
       const response = await fetch(`/api/tokens/${token.contractAddress}/save`, {
         method: isSaved ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      if (!response.ok) throw new Error('Failed to update saved status');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update saved status');
+      }
+
       setIsSaved(!isSaved);
     } catch (error) {
       console.error('Error updating saved status:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update saved status');
+      setTimeout(() => setError(''), 3000); // Clear error after 3 seconds
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -511,19 +539,33 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
 
           {/* Actions Row */}
           <div className="flex items-center justify-end space-x-2 p-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSaveToggle(e);
-              }}
-              className="p-1.5 text-gray-400 hover:text-[#03E1FF] rounded-lg transition-colors duration-300 hover:bg-white/5"
-            >
-              {isSaved ? (
-                <Star className="w-4 h-4 fill-current" />
-              ) : (
-                <StarOff className="w-4 h-4" />
+            <div className="relative">
+              {error && (
+                <div className="absolute bottom-full right-0 mb-2 w-48 p-2 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  {error}
+                </div>
               )}
-            </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSaveToggle(e);
+                }}
+                disabled={isLoading}
+                className={`p-1.5 rounded-lg transition-all duration-300 hover:bg-white/5 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                } ${
+                  isSaved 
+                    ? 'text-[#03E1FF]' 
+                    : 'text-gray-400 hover:text-[#03E1FF]'
+                }`}
+              >
+                {isSaved ? (
+                  <Star className="w-4 h-4 fill-current" />
+                ) : (
+                  <StarOff className="w-4 h-4" />
+                )}
+              </button>
+            </div>
             {canDelete && (
               <button
                 onClick={(e) => {
