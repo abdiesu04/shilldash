@@ -192,9 +192,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0A0F1F]">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header Section with Premium Styling */}
-        <div className="relative mb-8">
+        <div className="relative mb-8 z-20">
           <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 blur-3xl" />
           <div className="relative">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
@@ -228,7 +228,7 @@ export default function Dashboard() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6 max-w-md">
+        <div className="mb-6 max-w-md relative z-20">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-[#03E1FF]" />
@@ -252,14 +252,14 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Layout */}
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-6 relative z-10">
           {/* Trending Tokens Section - Sticky on Desktop */}
-          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)]">
+          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-32 lg:self-start lg:h-[calc(100vh-8rem)] overflow-y-auto">
             <TrendingTokens />
           </div>
 
           {/* Token Grid with Premium Layout */}
-          <div className="col-span-12 lg:col-span-9">
+          <div className="col-span-12 lg:col-span-9 relative">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
                 {[...Array(9)].map((_, i) => (
@@ -277,34 +277,21 @@ export default function Dashboard() {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
-                  {/* Add Token Card - Always First in My Tokens view */}
-                  {viewMode === 'my-tokens' && (
-                    <div className="transform transition-all duration-500 hover:z-10">
-                      <div
-                        onClick={() => setShowAddToken(true)}
-                        className="group relative bg-white dark:bg-gradient-to-br dark:from-[#0A0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF]/40 transition-all duration-500 p-4 cursor-pointer h-full"
-                      >
-                        <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="absolute -left-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="absolute -right-px top-[10%] bottom-[10%] w-[1px] bg-gradient-to-b from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="absolute -bottom-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        
-                        <div className="flex flex-col items-center justify-center h-full space-y-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                            <Plus className="w-8 h-8 text-[#03E1FF] group-hover:rotate-180 transition-transform duration-500" />
-                          </div>
-                          <div className="text-center">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-                              Add New Token
-                            </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px] mx-auto">
-                              Track and manage your favorite tokens
-                            </p>
-                          </div>
-                        </div>
+                  {/* Add Token Card */}
+                  <Link
+                    href="/add-token"
+                    className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gradient-to-br dark:from-[#0C0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF] dark:hover:border-[#03E1FF]/40 transition-all duration-300 transform hover:scale-[1.02] group shadow-sm hover:shadow-lg"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] p-[2px] mb-4">
+                      <div className="h-full w-full rounded-full bg-white dark:bg-[#0C0F1F] flex items-center justify-center group-hover:bg-transparent transition-all duration-300">
+                        <Plus className="h-6 w-6 text-[#03E1FF] group-hover:text-white" />
                       </div>
                     </div>
-                  )}
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                      Add Token
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track a new token</p>
+                  </Link>
 
                   {/* Existing Token Cards */}
                   {filteredTokens.length === 0 && viewMode === 'my-tokens' ? (

@@ -5,7 +5,7 @@ import { Github, Twitter, MessageSquare, ExternalLink } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0A0F1F] border-t border-[#03E1FF]/20">
+    <footer className="bg-gray-50 dark:bg-[#0A0F1F] border-t border-gray-200 dark:border-[#03E1FF]/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
@@ -16,7 +16,7 @@ export default function Footer() {
                 ShillDash
               </span>
             </Link>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Track and manage your favorite tokens in the crypto space with our premium dashboard.
             </p>
             <div className="flex items-center space-x-4">
@@ -24,7 +24,7 @@ export default function Footer() {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300"
+                className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-all duration-300"
               >
                 <Github className="w-5 h-5" />
               </a>
@@ -32,7 +32,7 @@ export default function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300"
+                className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-all duration-300"
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -40,7 +40,7 @@ export default function Footer() {
                 href="https://discord.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300"
+                className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-all duration-300"
               >
                 <MessageSquare className="w-5 h-5" />
               </a>
@@ -49,13 +49,13 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               {['Dashboard', 'Market', 'Portfolio', 'Add Token'].map((item) => (
                 <li key={item}>
                   <Link
                     href={`/${item.toLowerCase().replace(' ', '-')}`}
-                    className="text-gray-400 hover:text-white text-sm transition-colors duration-300 flex items-center group"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-300 flex items-center group"
                   >
                     <span className="relative">
                       {item}
@@ -69,13 +69,13 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Resources</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
               {['Documentation', 'API Reference', 'Status', 'Terms of Service'].map((item) => (
                 <li key={item}>
                   <Link
                     href="#"
-                    className="text-gray-400 hover:text-white text-sm transition-colors duration-300 flex items-center group"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-300 flex items-center group"
                   >
                     <span className="relative">
                       {item}
@@ -89,15 +89,15 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Stay Updated</h3>
-            <p className="text-gray-400 text-sm mb-4">
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Stay Updated</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
               Subscribe to our newsletter for the latest updates and features.
             </p>
             <form className="space-y-2">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
+                className="w-full px-4 py-2.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#03E1FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
               />
               <button
                 type="submit"
@@ -111,21 +111,21 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-[#03E1FF]/20">
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-[#03E1FF]/20">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               © {new Date().getFullYear()} ShillDash. All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
               <Link
                 href="/privacy"
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-300"
               >
                 Privacy Policy
               </Link>
               <Link
                 href="/terms"
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-300"
               >
                 Terms of Service
               </Link>
