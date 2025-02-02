@@ -7,7 +7,7 @@ import TrendingTokens from '@/components/tokens/TrendingTokens';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox, Search, X } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import AddTokenForm from '@/components/tokens/AddTokenForm';
 
@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const searchParams = useSearchParams();
   const viewMode = searchParams?.get('view') || 'all';
   const { userId, isLoaded, isSignedIn } = useAuth();
@@ -154,6 +155,12 @@ export default function Dashboard() {
     router.push(`/dashboard?view=${mode}`);
   };
 
+  // Add filtered tokens logic
+  const filteredTokens = tokens.filter(token => 
+    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0A0F1F] py-12">
@@ -220,6 +227,30 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6 max-w-md">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-[#03E1FF]" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2.5 border border-[#03E1FF]/20 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 focus:border-transparent transition-all duration-300"
+              placeholder="Search tokens..."
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors duration-300"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Main Content Layout */}
         <div className="grid grid-cols-12 gap-6">
           {/* Trending Tokens Section - Sticky on Desktop */}
@@ -276,7 +307,7 @@ export default function Dashboard() {
                   )}
 
                   {/* Existing Token Cards */}
-                  {tokens.length === 0 && viewMode === 'my-tokens' ? (
+                  {filteredTokens.length === 0 && viewMode === 'my-tokens' ? (
                     <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-6">
                         <Inbox className="w-10 h-10 text-[#03E1FF]" />
@@ -294,8 +325,20 @@ export default function Dashboard() {
                         Add Your First Token
                       </button>
                     </div>
+                  ) : filteredTokens.length === 0 && searchQuery ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-6">
+                        <Search className="w-10 h-10 text-[#03E1FF]" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        No Results Found
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+                        No tokens found matching "{searchQuery}"
+                      </p>
+                    </div>
                   ) : (
-                    tokens.map((token, index) => (
+                    filteredTokens.map((token, index) => (
                       <div
                         key={token.contractAddress}
                         className="transform transition-all duration-500 hover:z-10"
@@ -314,7 +357,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Enhanced Pagination */}
-                {totalPages > 1 && tokens.length > 0 && (
+                {totalPages > 1 && filteredTokens.length > 0 && (
                   <div className="mt-8 flex justify-center">
                     <div className="inline-flex items-center bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-[#03E1FF]/20">
                       <button
