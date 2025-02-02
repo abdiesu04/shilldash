@@ -88,14 +88,15 @@ async function fetchOnChainMetadata(address: string, connection: Connection) {
 }
 
 async function fetchMarketData(address: string) {
-  const headers = {
-    'Accept': 'application/json',
-    'User-Agent': 'Mozilla/5.0'
-  };
-
-  const tokenUrl = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${address}`;
-  const tokenResponse = await fetch(tokenUrl, { headers });
+  const apiUrl = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${address}`;
   
+  const tokenResponse = await fetch(apiUrl, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.COINGECKO_API_KEY}`
+    }
+  });
+
   if (!tokenResponse.ok) {
     throw new Error(`GeckoTerminal API error: ${tokenResponse.status}`);
   }
@@ -108,7 +109,10 @@ async function fetchMarketData(address: string) {
   }
 
   const poolsUrl = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${address}/pools?page=1&limit=1`;
-  const poolsResponse = await fetch(poolsUrl, { headers });
+  const poolsResponse = await fetch(poolsUrl, { headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.COINGECKO_API_KEY}`
+  } });
   const poolsData = await poolsResponse.json();
   const pool = poolsData.data?.[0]?.attributes;
 

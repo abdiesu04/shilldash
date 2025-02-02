@@ -4,15 +4,16 @@ import { Token } from '@/models';
 import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
 export async function GET(
-  request: Request,
+  req: Request,
   { params }: { params: { address: string } }
 ) {
   try {
     // Connect to database
     await connectToDatabase();
 
-    // Get the address from params
-    const address = await Promise.resolve(params.address);
+    // Simplify address retrieval
+    const address = params.address;
+    
     if (!address) {
       return NextResponse.json(
         { error: 'Token address is required' },
@@ -43,13 +44,14 @@ export async function GET(
 }
 
 export async function DELETE(
-  request: Request,
+  req: Request,
   { params }: { params: { address: string } }
 ) {
   try {
     await connectToDatabase();
-
-    const address = await Promise.resolve(params.address);
+    
+    const address = params.address;
+    
     if (!address) {
       return NextResponse.json(
         { error: 'Token address is required' },
