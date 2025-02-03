@@ -197,16 +197,40 @@ export default function Dashboard() {
         <div className="relative mb-8 z-20">
           <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 blur-3xl" />
           <div className="relative">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-              <div>
+            <div className="flex items-center justify-between space-x-6">
+              {/* Title Section */}
+              <div className="flex-shrink-0">
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] bg-clip-text text-transparent">
                   Token Dashboard
                 </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Discover and track the latest tokens in the crypto space
-                </p>
               </div>
-              <div className="flex items-center space-x-4">
+
+              {/* Search Bar - Centered */}
+              <div className="flex-grow max-w-xl relative">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-[#03E1FF]" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-11 pr-10 py-2.5 border border-[#03E1FF]/20 rounded-xl bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
+                    placeholder="Search tokens by name or symbol..."
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors duration-300"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* View Mode Buttons */}
+              <div className="flex-shrink-0">
                 <div className="flex items-center bg-white dark:bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/20">
                   {viewModes.map((mode) => (
                     <button
@@ -224,30 +248,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6 max-w-md relative z-20">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-[#03E1FF]" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2.5 border border-[#03E1FF]/20 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 focus:border-transparent transition-all duration-300"
-              placeholder="Search tokens..."
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors duration-300"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
           </div>
         </div>
 
