@@ -15,9 +15,42 @@ interface Token {
   price: number;
   metadata: {
     market_cap: number;
-    volume_24h: number;
-    price_change_24h: number;
+    volume_24h: {
+      m5: string;
+      h1: string;
+      h6: string;
+      h24: string;
+    };
+    price_change_24h: {
+      m5: string;
+      h1: string;
+      h6: string;
+      h24: string;
+    };
+    liquidity: number;
   };
+  onChainData: {
+    supply: string;
+    decimals: number;
+    mintAuthority: string | null;
+    freezeAuthority: string | null;
+    isInitialized: boolean;
+  };
+  urls: {
+    explorers: {
+      solscan: string;
+      solanaFM: string;
+      explorer: string;
+    };
+    trading: {
+      raydium: string;
+      jupiter: string;
+      orca: string;
+    };
+  };
+  description?: string;
+  clerkUserId?: string;
+  lastUpdated?: Date;
 }
 
 export default function TrendingTokens() {
@@ -45,7 +78,7 @@ export default function TrendingTokens() {
   };
 
   const handleTokenClick = (token: Token) => {
-    // No-op
+    setSelectedToken(token);
   };
 
   return (
@@ -117,17 +150,17 @@ export default function TrendingTokens() {
                     </p>
                   </div>
                   <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg ${
-                    token.metadata.price_change_24h >= 0
+                    Number(token.metadata.price_change_24h.h24) >= 0
                       ? 'text-green-400 bg-green-400/10'
                       : 'text-red-400 bg-red-400/10'
                   }`}>
-                    {token.metadata.price_change_24h >= 0 ? (
+                    {Number(token.metadata.price_change_24h.h24) >= 0 ? (
                       <TrendingUp className="w-3 h-3" />
                     ) : (
                       <TrendingDown className="w-3 h-3" />
                     )}
                     <span className="text-xs font-medium">
-                      {Math.abs(token.metadata.price_change_24h).toFixed(2)}%
+                      {Math.abs(Number(token.metadata.price_change_24h.h24)).toFixed(2)}%
                     </span>
                   </div>
                 </button>
