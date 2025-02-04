@@ -1,18 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
 import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
-export async function GET(
-  req: Request,
-  { params }: { params: { address: string } }
-) {
+interface RouteContext {
+  params: {
+    address: string;
+  };
+}
+
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     // Connect to database
     await connectToDatabase();
 
     // Simplify address retrieval
-    const address = params.address;
+    const address = context.params.address;
     
     if (!address) {
       return NextResponse.json(
@@ -43,14 +46,11 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { address: string } }
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     await connectToDatabase();
     
-    const address = params.address;
+    const address = context.params.address;
     
     if (!address) {
       return NextResponse.json(
