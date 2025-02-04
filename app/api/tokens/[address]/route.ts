@@ -5,16 +5,21 @@ import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { address: string } }
+  context: { params: Promise<{ address: string }> }
 ) {
+  console.log('GET Request received');
+  
   try {
-    // Connect to database
-    await connectToDatabase();
+    const params = await context.params;
+    const { address } = params;
+    console.log('Address from params:', address);
 
-    // Simplify address retrieval 
-    const address = context.params.address;
+    console.log('Connecting to database...');
+    await connectToDatabase();
+    console.log('Database connected');
     
     if (!address) {
+      console.log('No address provided');
       return NextResponse.json(
         { error: 'Token address is required' },
         { status: 400 }
@@ -22,10 +27,10 @@ export async function GET(
     }
 
     try {
-      // Fetch token data from Solana blockchain and market APIs
+      console.log('Fetching token data for address:', address);
       const tokenData = await fetchTokenData(address);
+      console.log('Token data received:', tokenData);
       
-      // Return the token data
       return NextResponse.json(tokenData);
     } catch (error) {
       console.error('Error fetching token data:', error);
@@ -45,30 +50,39 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { address: string } }
+  context: { params: Promise<{ address: string }> }
 ) {
+  console.log('DELETE Request received');
+  
   try {
-    await connectToDatabase();
+    const params = await context.params;
+    const { address } = params;
+    console.log('Address from params:', address);
     
-    const address = context.params.address;
+    console.log('Connecting to database...');
+    await connectToDatabase();
+    console.log('Database connected');
     
     if (!address) {
+      console.log('No address provided');
       return NextResponse.json(
         { error: 'Token address is required' },
         { status: 400 }
       );
     }
 
-    // Find and delete the token
     const result = await Token.findOneAndDelete({ contractAddress: address });
+    console.log('Delete operation result:', result);
 
     if (!result) {
+      console.log('Token not found');
       return NextResponse.json(
         { error: 'Token not found' },
         { status: 404 }
       );
     }
 
+    console.log('Token deleted successfully');
     return NextResponse.json(
       { message: 'Token deleted successfully' }
     );
