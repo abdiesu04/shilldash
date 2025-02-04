@@ -6,18 +6,15 @@ import { LogIn, Sparkles, X } from 'lucide-react';
 import { SignInButton } from '@clerk/nextjs';
 
 interface SignInDialogProps {
-  title?: string;
-  message?: string;
-  showHome?: boolean;
-  onClose?: () => void;
+  title: string;
+  message: string;
+  onClose: () => void;
+  isOpen: boolean;
 }
 
-export default function SignInDialog({
-  title = "Sign In Required",
-  message = "Please sign in to access this feature",
-  showHome = true,
-  onClose
-}: SignInDialogProps) {
+export default function SignInDialog({ title, message, onClose, isOpen }: SignInDialogProps) {
+  if (!isOpen) return null;
+
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -128,16 +125,14 @@ export default function SignInDialog({
                 </motion.button>
               </SignInButton>
 
-              {showHome && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 py-2"
-                >
-                  Return to Home
-                </motion.button>
-              )}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onClose}
+                className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 py-2"
+              >
+                Return to Home
+              </motion.button>
             </motion.div>
           </div>
 
