@@ -5,14 +5,14 @@ import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  context: { params: { address: string } }
 ) {
   try {
     // Connect to database
     await connectToDatabase();
 
-    // Simplify address retrieval
-    const address = params.address;
+    // Simplify address retrieval 
+    const address = context.params.address;
     
     if (!address) {
       return NextResponse.json(
@@ -45,12 +45,12 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  context: { params: { address: string } }
 ) {
   try {
     await connectToDatabase();
     
-    const address = params.address;
+    const address = context.params.address;
     
     if (!address) {
       return NextResponse.json(
@@ -79,4 +79,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}
