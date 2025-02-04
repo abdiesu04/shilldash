@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import TokenCard from '@/components/tokens/TokenCard';
-import EmptyTokenGrid from '@/components/tokens/EmptyTokenGrid';
 import TrendingTokens from '@/components/tokens/TrendingTokens';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, SignInButton } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox, Search, X } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
@@ -164,9 +163,7 @@ export default function Dashboard() {
   const handleAddTokenClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      setError('Please sign in to add tokens');
-      setTimeout(() => setError(''), 3000);
-      return;
+      return; // The SignInButton component will handle the click
     }
     setShowAddToken(true);
   };
@@ -295,39 +292,39 @@ export default function Dashboard() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr">
                   {/* Add Token Card */}
-                  <Link
-                    href="#"
-                    onClick={handleAddTokenClick}
-                    className={`group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br ${
-                      isSignedIn 
-                        ? 'from-gray-50 to-white dark:from-[#03E1FF]/5 dark:to-[#00FFA3]/5 hover:border-[#03E1FF] dark:hover:border-[#03E1FF]/40 hover:shadow-lg dark:hover:shadow-[#03E1FF]/10'
-                        : 'from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-900/50 cursor-not-allowed'
-                    } rounded-xl border-2 border-dashed border-gray-300 dark:border-[#03E1FF]/20 transition-all duration-300 h-full min-h-[280px]`}
-                  >
-                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full ${
-                      isSignedIn 
-                        ? 'bg-gray-100 dark:bg-[#03E1FF]/10 group-hover:scale-110'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    } flex items-center justify-center mb-4 transition-transform duration-300`}>
-                      <Plus className={`w-6 h-6 sm:w-8 sm:h-8 ${
-                        isSignedIn 
-                          ? 'text-[#03E1FF]'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`} />
-                    </div>
-                    <h3 className={`text-base sm:text-lg font-semibold mb-2 ${
-                      isSignedIn 
-                        ? 'text-gray-900 dark:text-white'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {isSignedIn ? 'Add Token' : 'Sign In Required'}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                      {isSignedIn 
-                        ? 'Add your token to start tracking its performance'
-                        : 'Please sign in to add and track tokens'}
-                    </p>
-                  </Link>
+                  <div className={`group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br ${
+                    isSignedIn 
+                      ? 'from-gray-50 to-white dark:from-[#03E1FF]/5 dark:to-[#00FFA3]/5 hover:border-[#03E1FF] dark:hover:border-[#03E1FF]/40 hover:shadow-lg dark:hover:shadow-[#03E1FF]/10'
+                      : 'from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-900/50 cursor-pointer'
+                  } rounded-xl border-2 border-dashed border-gray-300 dark:border-[#03E1FF]/20 transition-all duration-300 h-full min-h-[280px]`}>
+                    {isSignedIn ? (
+                      <Link
+                        href="#"
+                        onClick={handleAddTokenClick}
+                        className="w-full h-full flex flex-col items-center justify-center"
+                      >
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-100 dark:bg-[#03E1FF]/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#03E1FF]" />
+                        </div>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">Add Token</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                          Add your token to start tracking its performance
+                        </p>
+                      </Link>
+                    ) : (
+                      <SignInButton mode="modal">
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-100 dark:bg-[#03E1FF]/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-[#03E1FF]" />
+                          </div>
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">Sign In to Add Token</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                            Sign in to add and track your tokens
+                          </p>
+                        </div>
+                      </SignInButton>
+                    )}
+                  </div>
 
                   {/* Token Cards */}
                   {filteredTokens.map((token) => (
@@ -350,19 +347,27 @@ export default function Dashboard() {
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-4 sm:mb-6">
                       {viewMode === 'my-tokens' ? (
                         <Inbox className="w-8 h-8 sm:w-10 sm:h-10 text-[#03E1FF]" />
+                      ) : viewMode === 'saved' ? (
+                        <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-[#03E1FF]" />
                       ) : (
                         <Search className="w-8 h-8 sm:w-10 sm:h-10 text-[#03E1FF]" />
                       )}
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
-                      {viewMode === 'my-tokens' ? 'No Tokens Added Yet' : 'No Results Found'}
+                      {viewMode === 'my-tokens' 
+                        ? 'No Tokens Added Yet' 
+                        : viewMode === 'saved'
+                        ? 'No Saved Tokens'
+                        : 'No Results Found'}
                     </h3>
                     <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
                       {viewMode === 'my-tokens'
                         ? 'Start by adding your first token. You can track and manage all your tokens from here.'
+                        : viewMode === 'saved'
+                        ? 'You haven\'t saved any tokens yet. Save tokens to track them in your dashboard.'
                         : `No tokens found matching "${searchQuery}"`}
                     </p>
-                    {viewMode === 'my-tokens' && (
+                    {viewMode === 'my-tokens' && isSignedIn && (
                       <button
                         onClick={() => setShowAddToken(true)}
                         className="px-6 py-3 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity duration-300 hover:shadow-lg"

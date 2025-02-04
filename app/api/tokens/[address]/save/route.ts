@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { User } from '@/models';
 import { auth } from '@clerk/nextjs/server';
+import { EmailAddress } from '@clerk/nextjs/server';
 
 export async function POST(
   req: Request,
@@ -27,7 +28,7 @@ export async function POST(
         }
       }).then(res => res.json());
 
-      const primaryEmail = clerkUser?.email_addresses?.find(email => email.id === clerkUser.primary_email_address_id)?.email_address;
+      const primaryEmail = clerkUser?.email_addresses?.find((email: EmailAddress) => email.id === clerkUser.primary_email_address_id)?.email_address;
 
       if (!primaryEmail) {
         return NextResponse.json(

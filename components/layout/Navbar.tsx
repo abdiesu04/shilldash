@@ -17,8 +17,7 @@ const navigation = [
 
 const menuOptions = [
   { id: 'your-tokens', name: 'Your Tokens', icon: Star },
-  { id: 'saved-tokens', name: 'Saved Tokens', icon: LineChart },
-  { id: 'settings', name: 'Settings', icon: Settings },
+  { id: 'saved-tokens', name: 'Saved Tokens', icon: LineChart }
 ];
 
 const Navbar = () => {
@@ -232,6 +231,9 @@ const Navbar = () => {
             );
           })}
 
+         
+
+          {/* Theme Toggle */}
           <div className="flex items-center justify-between px-4 py-3">
             <button
               onClick={() => {
@@ -247,11 +249,39 @@ const Navbar = () => {
                 </>
               )}
             </button>
+            
           </div>
-
-       
+           {/* Mobile User Profile */}
+           <div className="px-4 py-3">
+            {isLoaded && !isSignedIn ? (
+              <SignInButton mode="modal">
+                <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                  <LogIn className="w-5 h-5" />
+                  <span>Sign In</span>
+                </button>
+              </SignInButton>
+            ) : isLoaded && userId ? (
+              <div className="flex items-center space-x-3 px-4 py-3">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8 ring-2 ring-gray-200 dark:ring-[#03E1FF]/20 hover:ring-[#03E1FF]/40 transition-all duration-300",
+                      userButtonPopoverCard: "bg-white dark:bg-[#0A0F1F] border border-gray-200 dark:border-[#03E1FF]/20 shadow-lg dark:shadow-[0_0_30px_-15px_rgba(0,255,163,0.3)]",
+                      userButtonPopoverActionButton: "hover:bg-gray-100 dark:hover:bg-white/5",
+                      userButtonPopoverActionButtonText: "text-gray-900 dark:text-white",
+                      userButtonPopoverFooter: "border-t border-gray-200 dark:border-[#03E1FF]/20",
+                    },
+                  }}
+                />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Account Settings</span>
+              </div>
+            ) : null}
+          </div>
+          
         </div>
       </div>
+       {/* Mobile User Profile */}
+       
 
       {/* Add Token Modal */}
       {showAddToken && (
