@@ -3,17 +3,14 @@ import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { Reaction } from '@/models';
 
-interface PageParams {
-  params: Promise<{ address: string }>;
-}
-
 export async function GET(
   request: NextRequest,
-  { params }: PageParams
+  context: { params: Promise<{ address: string }> }
 ) {
-  const { address: tokenAddress } = await params;
-  
   try {
+    const params = await context.params;
+    const { address: tokenAddress } = params;
+    
     const { userId } = await auth();
     await connectToDatabase();
 
@@ -59,11 +56,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: PageParams
+  context: { params: Promise<{ address: string }> }
 ) {
-  const { address: tokenAddress } = await params;
-  
   try {
+    const params = await context.params;
+    const { address: tokenAddress } = params;
+    
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(

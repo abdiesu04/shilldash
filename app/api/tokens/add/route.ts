@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error adding token:', error);
     let errorMessage = 'Unknown error occurred';
-    let statusCode = 500;
+    const statusCode = 500;
 
     if (error instanceof Error) {
       errorMessage = error.message;

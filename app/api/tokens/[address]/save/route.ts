@@ -1,14 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/utils/mongodb';
 import { User } from '@/models';
 import { auth } from '@clerk/nextjs/server';
 import { EmailAddress } from '@clerk/nextjs/server';
 
 export async function POST(
-  req: Request,
-  { params }: { params: { address: string } }
+  request: NextRequest,
+  context: { params: Promise<{ address: string }> }
 ) {
   try {
+    const params = await context.params;
+    const { address } = params;
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -49,7 +52,7 @@ export async function POST(
     // Add token to user's savedTokens array
     const result = await User.findOneAndUpdate(
       { clerkUserId: userId },
-      { $addToSet: { savedTokens: params.address } },
+      { $addToSet: { savedTokens: address } },
       { new: true }
     );
 
@@ -71,10 +74,13 @@ export async function POST(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { address: string } }
+  request: NextRequest,
+  context: { params: Promise<{ address: string }> }
 ) {
   try {
+    const params = await context.params;
+    const { address } = params;
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -85,7 +91,7 @@ export async function DELETE(
     // Remove token from user's savedTokens array
     const result = await User.findOneAndUpdate(
       { clerkUserId: userId },
-      { $pull: { savedTokens: params.address } },
+      { $pull: { savedTokens: address } },
       { new: true }
     );
 
