@@ -133,7 +133,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   const maxPrice = Math.max(...prices);
   const priceMargin = (maxPrice - minPrice) * 0.05;
 
-  // Enhanced chart options with stable animations
+  // Enhanced chart options with light/dark theme support
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -151,9 +151,9 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(10, 15, 31, 0.95)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1F2937',
+        bodyColor: '#1F2937',
         padding: 12,
         displayColors: false,
         titleFont: {
@@ -185,27 +185,12 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         grid: {
           display: false,
         },
-        ticks: {
-          display: false,
-          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
-            const value = Number(tickValue);
-            if (selectedTimeframe === '1h') return `${value}m`;
-            if (selectedTimeframe === '24h') return `${value}h`;
-            return `${value}d`;
-          }
-        },
       },
       y: {
         type: 'linear' as const,
         display: false,
         grid: {
           display: false,
-        },
-        ticks: {
-          display: false,
-          callback: function(this: Scale<CoreScaleOptions>, tickValue: string | number): string {
-            return `$${Number(tickValue).toFixed(2)}`;
-          }
         },
       },
     },
@@ -226,40 +211,36 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         borderCapStyle: 'round' as const,
         borderJoinStyle: 'round' as const,
         cubicInterpolationMode: 'monotone' as const,
+        borderColor: token.metadata.price_change_24h >= 0 
+          ? 'rgb(16, 185, 129)'
+          : 'rgb(239, 68, 68)',
+        backgroundColor: (context: ScriptableContext<'line'>) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+          const color = token.metadata.price_change_24h >= 0 
+            ? 'rgba(16, 185, 129, 1)'
+            : 'rgba(239, 68, 68, 1)';
+          gradient.addColorStop(0, color.replace('1)', '0.1)'));
+          gradient.addColorStop(1, color.replace('1)', '0)'));
+          return gradient;
+        },
       },
     },
   };
 
-  // Enhanced detail chart options for modal
+  // Enhanced detail chart options for modal with light/dark theme support
   const detailChartOptions = {
     ...chartOptions,
-    animation: {
-      duration: 750,
-      easing: 'easeOutQuart' as const,
-    },
     plugins: {
       ...chartOptions.plugins,
       tooltip: {
         ...chartOptions.plugins.tooltip,
-        enabled: true,
-        titleFont: {
-          ...chartOptions.plugins.tooltip.titleFont,
-          size: 16,
-        },
-        bodyFont: {
-          ...chartOptions.plugins.tooltip.bodyFont,
-          size: 15,
-        },
-        padding: 16,
-        backgroundColor: 'rgba(10, 15, 31, 0.98)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(3, 225, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        titleColor: '#1F2937',
+        bodyColor: '#1F2937',
+        borderColor: 'rgba(226, 232, 240, 0.5)',
         borderWidth: 1,
         cornerRadius: 8,
-        animation: {
-          duration: 150,
-        },
       },
     },
     scales: {
@@ -267,11 +248,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         type: 'linear' as const,
         display: true,
         grid: {
-          display: false,
+          color: 'rgba(226, 232, 240, 0.5)',
           drawBorder: false,
         },
         ticks: {
-          color: '#94A3B8',
+          color: '#64748B',
           font: {
             size: 12,
             family: 'Inter',
@@ -288,19 +269,18 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         border: {
           display: false,
         },
-        min: 0,
       },
       y: {
         type: 'linear' as const,
         display: true,
         position: 'right' as const,
         grid: {
-          color: 'rgba(148, 163, 184, 0.1)',
+          color: 'rgba(226, 232, 240, 0.5)',
           drawBorder: false,
           lineWidth: 1,
         },
         ticks: {
-          color: '#94A3B8',
+          color: '#64748B',
           font: {
             size: 12,
             family: 'Inter',
@@ -418,7 +398,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   return (
     <div
       onClick={() => setShowDetails(true)}
-      className="group relative w-full bg-white dark:bg-[#0A0F1F] rounded-xl border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group relative w-full bg-white dark:bg-[#0A0F1F] rounded-lg border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
     >
       {/* Decorative Edges */}
       <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -429,57 +409,57 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
       {/* Main Content Container */}
       <div className="flex flex-col h-full">
         {/* Token Header */}
-        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-3 max-w-[70%]">
+            <div className="flex items-center space-x-2.5 max-w-[70%]">
               <div className="relative flex-shrink-0">
                 <Image
                   src={token.logo}
                   alt={`${token.name} logo`}
-                  width={40}
-                  height={40}
+                  width={32}
+                  height={32}
                   className="rounded-full ring-2 ring-gray-200 dark:ring-[#03E1FF]/20 group-hover:ring-[#03E1FF]/40 transition-all duration-300"
                 />
                 {token.metadata.price_change_24h > 5 && (
                   <div className="absolute -top-1 -right-1">
-                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-[#00FFA3]/10 flex items-center justify-center">
-                      <TrendingUp className="w-2.5 h-2.5 text-emerald-600 dark:text-[#00FFA3]" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-100 dark:bg-[#00FFA3]/10 flex items-center justify-center">
+                      <TrendingUp className="w-2 h-2 text-emerald-600 dark:text-[#00FFA3]" />
                     </div>
                   </div>
                 )}
               </div>
               <div className="min-w-0">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
+                <div className="flex items-center space-x-1.5">
+                  <h3 className="font-semibold text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
                     {formatTokenName(token.name)}
                   </h3>
                   {isMyToken && (
-                    <div className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20">
-                      <div className="flex items-center space-x-1">
-                        <Crown className="w-2.5 h-2.5 text-[#03E1FF]" />
-                        <span className="text-[9px] font-medium text-[#03E1FF]">Creator</span>
+                    <div className="flex-shrink-0 px-1 py-0.5 rounded bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20">
+                      <div className="flex items-center space-x-0.5">
+                        <Crown className="w-2 h-2 text-[#03E1FF]" />
+                        <span className="text-[8px] font-medium text-[#03E1FF]">Creator</span>
                       </div>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                   {token.symbol}
                 </p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+              <p className="font-semibold text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
                 {formatPrice(token.price)}
               </p>
-              <div className={`flex items-center justify-end space-x-1 text-[10px] ${
+              <div className={`flex items-center justify-end space-x-0.5 text-[9px] ${
                 token.metadata.price_change_24h >= 0
                   ? 'text-emerald-600 dark:text-[#00FFA3]'
                   : 'text-red-600 dark:text-red-500'
               }`}>
                 {token.metadata.price_change_24h >= 0 ? (
-                  <TrendingUp className="w-2.5 h-2.5" />
+                  <TrendingUp className="w-2 h-2" />
                 ) : (
-                  <TrendingDown className="w-2.5 h-2.5" />
+                  <TrendingDown className="w-2 h-2" />
                 )}
                 <span className="font-medium whitespace-nowrap">
                   {Math.abs(token.metadata.price_change_24h).toFixed(2)}%
@@ -490,8 +470,8 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Chart Section */}
-        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-          <div className="relative h-[60px]">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
+          <div className="relative h-[50px]">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
               <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 animate-pulse" />
@@ -505,49 +485,45 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Stats Grid */}
-        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
-              <p className="font-medium text-xs text-gray-900 dark:text-white">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
+              <p className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
+              <p className="font-medium text-[10px] text-gray-900 dark:text-white">
                 {formatLargeNumber(token.metadata.market_cap)}
               </p>
             </div>
-            <div className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
-              <p className="font-medium text-xs text-gray-900 dark:text-white">
+            <div className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
+              <p className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
+              <p className="font-medium text-[10px] text-gray-900 dark:text-white">
                 {formatLargeNumber(token.metadata.volume_24h)}
               </p>
             </div>
           </div>
         </div>
 
-       
-
         {/* Footer with Address and Actions */}
-        <div className="p-3 mt-auto">
+        <div className="p-2.5 mt-auto">
           {/* Contract Address */}
-          <div className="flex items-center justify-between mb-2 p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono truncate">
+          <div className="flex items-center justify-between mb-1.5 p-1 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
+            <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+              <span className="text-[9px] text-gray-500 dark:text-gray-400 font-mono truncate">
                 {token.contractAddress}
               </span>
               <button
                 onClick={handleCopyAddress}
-                className="flex-shrink-0 p-1 hover:bg-white/10 rounded-md transition-colors duration-300"
+                className="flex-shrink-0 p-0.5 hover:bg-white/10 rounded transition-colors duration-300"
                 title="Copy Address"
               >
                 {copied ? (
-                  <Check className="w-3 h-3 text-[#00FFA3]" />
+                  <Check className="w-2.5 h-2.5 text-[#00FFA3]" />
                 ) : (
-                  <Copy className="w-3 h-3 text-gray-400 hover:text-[#03E1FF]" />
+                  <Copy className="w-2.5 h-2.5 text-gray-400 hover:text-[#03E1FF]" />
                 )}
               </button>
             </div>
           </div>
 
-               {/* Reactions Section */}
-       
           {/* Actions Row */}
           <div className="flex items-center justify-between">
             {/* Reactions on the left */}
@@ -556,10 +532,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
             </div>
 
             {/* Actions on the right */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-1">
               <div className="relative">
                 {error && (
-                  <div className="absolute bottom-full right-0 mb-2 w-48 p-2 text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <div className="absolute bottom-full right-0 mb-1.5 w-40 p-1.5 text-[9px] text-red-500 bg-red-500/10 border border-red-500/20 rounded">
                     {error}
                   </div>
                 )}
@@ -569,7 +545,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                     handleSaveToggle(e);
                   }}
                   disabled={isLoading}
-                  className={`p-1.5 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${
+                  className={`p-1 rounded transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   } ${
                     isSaved 
@@ -578,9 +554,9 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                   }`}
                 >
                   {isSaved ? (
-                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-3.5 h-3.5 fill-current" />
                   ) : (
-                    <StarOff className="w-4 h-4" />
+                    <StarOff className="w-3.5 h-3.5" />
                   )}
                 </button>
               </div>
@@ -590,10 +566,10 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
                     e.stopPropagation();
                     handleDelete(e);
                   }}
-                  className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                  className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-white/5"
                   title="Delete Token"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -608,7 +584,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         title={token.name}
         size="lg"
       >
-        <div className="space-y-6">
+        <div className="space-y-6 bg-white dark:bg-[#0A0F1F]">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {token.logo && (
@@ -660,11 +636,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
             </div>
           </div>
 
-          <div className="relative h-[300px]">
+          <div className="relative h-[300px] bg-white dark:bg-[#0A0F1F]">
             <Line
               options={detailChartOptions}
               data={chartData}
-              className="transition-opacity duration-500 group-hover:opacity-90"
+              className="transition-opacity duration-500"
             />
           </div>
         </div>

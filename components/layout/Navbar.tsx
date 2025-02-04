@@ -143,7 +143,7 @@ const Navbar = () => {
             </div>
 
             {/* Logo */}
-            <div className="flex items-center flex-1 md:flex-none">
+            <div className="flex items-center ml-5">
               <Link href="/dashboard" className="flex items-center group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-0 blur-xl group-hover:opacity-20 transition-all duration-700" />
                 <span className="text-2xl font-bold bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] bg-clip-text text-transparent transform transition-all duration-500 group-hover:scale-[1.02]">

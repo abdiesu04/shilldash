@@ -191,7 +191,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0F1F]">
+    <div className="min-h-screen bg-white dark:bg-[#0A0F1F]">
       <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header Section with Premium Styling */}
         <div className="relative mb-8 z-20">
@@ -342,31 +342,6 @@ export default function Dashboard() {
                     ))
                   )}
                 </div>
-
-                {/* Enhanced Pagination */}
-                {totalPages > 1 && filteredTokens.length > 0 && (
-                  <div className="mt-8 flex justify-center">
-                    <div className="inline-flex items-center bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-[#03E1FF]/20">
-                      <button
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        disabled={page === 1}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <span className="px-4 text-sm text-gray-400">
-                        Page {page} of {totalPages}
-                      </span>
-                      <button
-                        onClick={() => setPage(Math.min(totalPages, page + 1))}
-                        disabled={page === totalPages}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>
