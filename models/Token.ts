@@ -89,9 +89,7 @@ const tokenSchema = new mongoose.Schema({
 // Create compound index for user's tokens
 tokenSchema.index({ clerkUserId: 1, contractAddress: 1 });
 
-// Clear existing model if it exists to prevent OverwriteModelError
-mongoose.models = {};
+// Check if the model exists before creating it
+const Token = mongoose.models.Token || mongoose.model('Token', tokenSchema);
 
-const Token = mongoose.model('Token', tokenSchema);
-
-export default Token; 
+export { Token }; 

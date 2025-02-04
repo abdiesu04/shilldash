@@ -6,10 +6,20 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-let cached = global.mongoose;
+interface Cached {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: Cached | undefined;
+}
+
+const cached: Cached = global.mongoose || { conn: null, promise: null };
+
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
 export async function connectToDatabase() {
@@ -29,10 +39,6 @@ export async function connectToDatabase() {
       .then((mongoose) => {
         console.log('MongoDB connected successfully to shilldash database');
         return mongoose;
-      })
-      .catch((error) => {
-        console.error('MongoDB connection error:', error);
-        throw error;
       });
   }
 
