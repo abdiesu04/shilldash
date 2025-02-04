@@ -12,9 +12,23 @@ interface TokenCardProps {
     price: number;
     metadata: {
       market_cap: number;
-      volume_24h: number;
-      price_change_24h: number;
+      volume_24h: {
+        m5: string;
+        h1: string;
+        h6: string;
+        h24: string;
+      };
+      price_change_24h: {
+        m5: string;
+        h1: string;
+        h6: string;
+        h24: string;
+      };
       liquidity: number;
+    };
+    chartData?: {
+      labels: string[];
+      prices: number[];
     };
     onChainData: {
       supply: string;
@@ -26,10 +40,16 @@ interface TokenCardProps {
       };
     };
   };
+  showReactions?: boolean;
+  onDelete?: () => void;
+  showDeleteButton?: boolean;
 }
 
-export default function TokenCard({ token }: TokenCardProps) {
-  const priceChangeColor = token.metadata.price_change_24h >= 0 ? 'text-green-600' : 'text-red-600';
+export default function TokenCard({ token, onDelete, showDeleteButton, showReactions = true }: TokenCardProps) {
+  const priceChange = Number(token.metadata.price_change_24h.h24);
+  const volume = Number(token.metadata.volume_24h.h24);
+
+  const priceChangeColor = priceChange >= 0 ? 'text-green-600' : 'text-red-600';
 
   return (
     <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
@@ -62,7 +82,7 @@ export default function TokenCard({ token }: TokenCardProps) {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500 dark:text-gray-400">24h Change</span>
               <span className={`font-medium ${priceChangeColor}`}>
-                {formatPercentage(token.metadata.price_change_24h)}%
+                {formatPercentage(priceChange)}%
               </span>
             </div>
 
@@ -76,7 +96,7 @@ export default function TokenCard({ token }: TokenCardProps) {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500 dark:text-gray-400">24h Volume</span>
               <span className="font-medium text-gray-900 dark:text-white">
-                ${formatNumber(token.metadata.volume_24h)}
+                ${formatNumber(volume)}
               </span>
             </div>
 
@@ -107,7 +127,7 @@ export default function TokenCard({ token }: TokenCardProps) {
 
       {/* Reactions section with proper spacing and borders */}
       <div className="mt-auto p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
-        <TokenReactions tokenAddress={token.contractAddress} />
+        {showReactions && <TokenReactions tokenAddress={token.contractAddress} />}
       </div>
     </div>
   );
