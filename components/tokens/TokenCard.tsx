@@ -418,7 +418,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
   return (
     <div
       onClick={() => setShowDetails(true)}
-      className="group relative w-full h-[320px] p-4 bg-white dark:bg-[#0A0F1F] rounded-xl border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group relative w-full bg-white dark:bg-[#0A0F1F] rounded-xl border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
     >
       {/* Decorative Edges */}
       <div className="absolute -top-px left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#03E1FF]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -429,102 +429,105 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
       {/* Main Content Container */}
       <div className="flex flex-col h-full">
         {/* Token Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3 max-w-[70%]">
-            <div className="relative flex-shrink-0">
-              <Image
-                src={token.logo}
-                alt={`${token.name} logo`}
-                width={48}
-                height={48}
-                className="rounded-full ring-2 ring-gray-200 dark:ring-[#03E1FF]/20 group-hover:ring-[#03E1FF]/40 transition-all duration-300"
-              />
-              {token.metadata.price_change_24h > 5 && (
-                <div className="absolute -top-1 -right-1">
-                  <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-[#00FFA3]/10 flex items-center justify-center">
-                    <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-[#00FFA3]" />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
-                  {formatTokenName(token.name)}
-                </h3>
-                {isMyToken && (
-                  <div className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20">
-                    <div className="flex items-center space-x-1">
-                      <Crown className="w-3 h-3 text-[#03E1FF]" />
-                      <span className="text-[10px] font-medium text-[#03E1FF]">Creator</span>
+        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-3 max-w-[70%]">
+              <div className="relative flex-shrink-0">
+                <Image
+                  src={token.logo}
+                  alt={`${token.name} logo`}
+                  width={40}
+                  height={40}
+                  className="rounded-full ring-2 ring-gray-200 dark:ring-[#03E1FF]/20 group-hover:ring-[#03E1FF]/40 transition-all duration-300"
+                />
+                {token.metadata.price_change_24h > 5 && (
+                  <div className="absolute -top-1 -right-1">
+                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-[#00FFA3]/10 flex items-center justify-center">
+                      <TrendingUp className="w-2.5 h-2.5 text-emerald-600 dark:text-[#00FFA3]" />
                     </div>
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                {token.symbol}
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
+                    {formatTokenName(token.name)}
+                  </h3>
+                  {isMyToken && (
+                    <div className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 backdrop-blur-sm border border-[#03E1FF]/20">
+                      <div className="flex items-center space-x-1">
+                        <Crown className="w-2.5 h-2.5 text-[#03E1FF]" />
+                        <span className="text-[9px] font-medium text-[#03E1FF]">Creator</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {token.symbol}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="font-semibold text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 text-base">
-              {formatPrice(token.price)}
-            </p>
-            <div className={`flex items-center justify-end space-x-1 text-xs ${
-              token.metadata.price_change_24h >= 0
-                ? 'text-emerald-600 dark:text-[#00FFA3]'
-                : 'text-red-600 dark:text-red-500'
-            }`}>
-              {token.metadata.price_change_24h >= 0 ? (
-                <TrendingUp className="w-3 h-3" />
-              ) : (
-                <TrendingDown className="w-3 h-3" />
-              )}
-              <span className="font-medium whitespace-nowrap">
-                {Math.abs(token.metadata.price_change_24h).toFixed(2)}%
-              </span>
+            <div className="text-right flex-shrink-0">
+              <p className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
+                {formatPrice(token.price)}
+              </p>
+              <div className={`flex items-center justify-end space-x-1 text-[10px] ${
+                token.metadata.price_change_24h >= 0
+                  ? 'text-emerald-600 dark:text-[#00FFA3]'
+                  : 'text-red-600 dark:text-red-500'
+              }`}>
+                {token.metadata.price_change_24h >= 0 ? (
+                  <TrendingUp className="w-2.5 h-2.5" />
+                ) : (
+                  <TrendingDown className="w-2.5 h-2.5" />
+                )}
+                <span className="font-medium whitespace-nowrap">
+                  {Math.abs(token.metadata.price_change_24h).toFixed(2)}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Chart Section */}
-        <div className="relative h-[80px] mb-4">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 animate-pulse" />
+        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="relative h-[60px]">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 animate-pulse" />
+            </div>
+            <Line 
+              options={chartOptions} 
+              data={chartData}
+              className="transition-opacity duration-500 group-hover:opacity-90"
+            />
           </div>
-          <Line 
-            options={chartOptions} 
-            data={chartData}
-            className="transition-opacity duration-500 group-hover:opacity-90"
-          />
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
-              {formatLargeNumber(token.metadata.market_cap)}
-            </p>
-          </div>
-          <div className="p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
-            <p className="font-medium text-xs text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300 truncate">
-              {formatLargeNumber(token.metadata.volume_24h)}
-            </p>
+        <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
+              <p className="font-medium text-xs text-gray-900 dark:text-white">
+                {formatLargeNumber(token.metadata.market_cap)}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">24h Volume</p>
+              <p className="font-medium text-xs text-gray-900 dark:text-white">
+                {formatLargeNumber(token.metadata.volume_24h)}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Add reactions before the address section */}
-        <div className="mb-4">
-          <TokenReactions tokenAddress={token.contractAddress} />
-        </div>
+       
 
-        {/* Address Section - Now part of the main content flow */}
-        <div className="mt-auto space-y-2">
+        {/* Footer with Address and Actions */}
+        <div className="p-3 mt-auto">
           {/* Contract Address */}
-          <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-xl border border-[#03E1FF]/10 group-hover:border-[#03E1FF]/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2 p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono truncate">
                 {token.contractAddress}
@@ -543,47 +546,57 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
             </div>
           </div>
 
+               {/* Reactions Section */}
+       
           {/* Actions Row */}
-          <div className="flex items-center justify-end space-x-2 p-2">
-            <div className="relative">
-              {error && (
-                <div className="absolute bottom-full right-0 mb-2 w-48 p-2 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  {error}
-                </div>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSaveToggle(e);
-                }}
-                disabled={isLoading}
-                className={`p-1.5 rounded-lg transition-all duration-300 hover:bg-white/5 ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                } ${
-                  isSaved 
-                    ? 'text-[#03E1FF]' 
-                    : 'text-gray-400 hover:text-[#03E1FF]'
-                }`}
-              >
-                {isSaved ? (
-                  <Star className="w-4 h-4 fill-current" />
-                ) : (
-                  <StarOff className="w-4 h-4" />
-                )}
-              </button>
+          <div className="flex items-center justify-between">
+            {/* Reactions on the left */}
+            <div className="flex-1">
+              <TokenReactions tokenAddress={token.contractAddress} />
             </div>
-            {canDelete && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(e);
-                }}
-                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300 hover:bg-white/5"
-                title="Delete Token"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
+
+            {/* Actions on the right */}
+            <div className="flex items-center space-x-1.5">
+              <div className="relative">
+                {error && (
+                  <div className="absolute bottom-full right-0 mb-2 w-48 p-2 text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveToggle(e);
+                  }}
+                  disabled={isLoading}
+                  className={`p-1.5 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  } ${
+                    isSaved 
+                      ? 'text-[#03E1FF]' 
+                      : 'text-gray-400 hover:text-[#03E1FF]'
+                  }`}
+                >
+                  {isSaved ? (
+                    <Star className="w-4 h-4 fill-current" />
+                  ) : (
+                    <StarOff className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {canDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(e);
+                  }}
+                  className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                  title="Delete Token"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

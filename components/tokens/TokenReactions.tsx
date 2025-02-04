@@ -116,51 +116,29 @@ export default function TokenReactions({ tokenAddress }: TokenReactionsProps) {
   };
 
   return (
-    <div className="flex flex-col items-center w-full p-2 bg-white/5 rounded-lg">
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Reactions</div>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleReaction('rocket');
-          }}
-          disabled={isLoading}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200
-            bg-white dark:bg-gray-700/50 border border-[#03E1FF]/20 
-            hover:border-[#03E1FF] hover:scale-105
-            active:scale-95
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-            ${userReaction === 'rocket' ? 'text-[#03E1FF] border-[#03E1FF]/40' : 'text-gray-700 dark:text-gray-300'}
-          `}
-        >
-          <span className="text-xl">🚀</span>
-          <span className="text-sm font-medium">{reactionCounts.rocket}</span>
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleReaction('poop');
-          }}
-          disabled={isLoading}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200
-            bg-white dark:bg-gray-700/50 border border-[#DC1FFF]/20
-            hover:border-[#DC1FFF] hover:scale-105
-            active:scale-95
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-            ${userReaction === 'poop' ? 'text-[#DC1FFF] border-[#DC1FFF]/40' : 'text-gray-700 dark:text-gray-300'}
-          `}
-        >
-          <span className="text-xl">💩</span>
-          <span className="text-sm font-medium">{reactionCounts.poop}</span>
-        </button>
-      </div>
-
-      {error && (
-        <span className="text-xs text-red-500 animate-pulse mt-2">{error}</span>
-      )}
+    <div className="flex items-center justify-center space-x-2">
+      <button
+        onClick={(e) => handleReaction('rocket')}
+        className={`inline-flex items-center space-x-1 p-1 rounded-md transition-all duration-300 ${
+          userReaction === 'rocket'
+            ? 'bg-[#03E1FF]/10 text-[#03E1FF]'
+            : 'hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'
+        }`}
+      >
+        <span className="text-base">🚀</span>
+        <span className="text-xs font-medium">{reactionCounts.rocket}</span>
+      </button>
+      <button
+        onClick={(e) => handleReaction('poop')}
+        className={`inline-flex items-center space-x-1 p-1 rounded-md transition-all duration-300 ${
+          userReaction === 'poop'
+            ? 'bg-[#03E1FF]/10 text-[#03E1FF]'
+            : 'hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'
+        }`}
+      >
+        <span className="text-base">💩</span>
+        <span className="text-xs font-medium">{reactionCounts.poop}</span>
+      </button>
     </div>
   );
 } 
