@@ -32,9 +32,14 @@ export async function GET(request: Request) {
       }
       const user = await User.findOne({ clerkUserId: userId });
       if (!user) {
-        return NextResponse.json({ message: 'User not found' }, { status: 404 });
+        return NextResponse.json({
+          tokens: [],
+          totalPages: 0,
+          currentPage: 1,
+          total: 0
+        });
       }
-      query = { contractAddress: { $in: user.savedTokens } };
+      query = { contractAddress: { $in: user.savedTokens || [] } };
     }
 
     // Sort by price change for trending view
@@ -50,6 +55,16 @@ export async function GET(request: Request) {
       .limit(limit);
 
     const total = await Token.countDocuments(query);
+
+    // If no tokens found, return empty array instead of 404
+    if (!tokens.length) {
+      return NextResponse.json({
+        tokens: [],
+        totalPages: 0,
+        currentPage: 1,
+        total: 0
+      });
+    }
 
     // If user is logged in, get their saved tokens to mark saved status
     let savedTokens: string[] = [];
@@ -75,8 +90,11 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching tokens:', error);
     return NextResponse.json({
-      message: 'Error fetching tokens',
+      tokens: [],
+      totalPages: 0,
+      currentPage: 1,
+      total: 0,
       error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    });
   }
 } 

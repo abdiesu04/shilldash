@@ -6,7 +6,7 @@ import TrendingTokens from '@/components/tokens/TrendingTokens';
 import Link from 'next/link';
 import { useAuth, SignInButton } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, User, Crown, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Inbox, Search, X } from 'lucide-react';
+import { Plus, User, Crown, AlertTriangle, Inbox, Search, X, CheckCircle2 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import AddTokenForm from '@/components/tokens/AddTokenForm';
 
@@ -73,31 +73,29 @@ export default function Dashboard() {
         return;
       }
 
-      let url = `/api/tokens/list?page=${page}&limit=9&view=${viewMode}`;
+      const url = `/api/tokens/list?page=${page}&limit=9&view=${viewMode}`;
 
       const response = await fetch(url);
+      const data = await response.json();
+      
       if (!response.ok) {
         if (response.status === 401) {
           router.push('/sign-in');
           return;
         }
-        throw new Error('Failed to fetch tokens');
+        throw new Error(data.error || 'Failed to fetch tokens');
       }
-      
-      const data = await response.json();
-      setTokens(data.tokens);
-      setTotalPages(data.totalPages);
+
+      setTokens(data.tokens || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching tokens:', error);
       setError(error instanceof Error ? error.message : 'Error fetching tokens');
+      setTokens([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDeleteClick = (contractAddress: string) => {
-    setTokenToDelete(contractAddress);
-    setShowConfirmDialog(true);
   };
 
   const handleCancelDelete = () => {
@@ -168,6 +166,45 @@ export default function Dashboard() {
     setShowAddToken(true);
   };
 
+  // Add this empty state component
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+      <Inbox className="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        {viewMode === 'my-tokens' 
+          ? "You haven't added any tokens yet"
+          : viewMode === 'saved'
+          ? "You haven't saved any tokens yet"
+          : "No tokens found"}
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+        {viewMode === 'my-tokens' 
+          ? "Get started by adding your first token"
+          : viewMode === 'saved'
+          ? "Start saving tokens to track them here"
+          : "Try adjusting your search or filters"}
+      </p>
+      {(viewMode === 'my-tokens' || viewMode === 'all') && (
+        isSignedIn ? (
+          <button
+            onClick={() => setShowAddToken(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Token
+          </button>
+        ) : (
+          <SignInButton mode="modal">
+            <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <User className="w-5 h-5 mr-2" />
+              Sign in to Add Token
+            </button>
+          </SignInButton>
+        )
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24">
@@ -192,6 +229,16 @@ export default function Dashboard() {
               {error}
             </h3>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoading && (!tokens || tokens.length === 0)) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <EmptyState />
         </div>
       </div>
     );
@@ -377,6 +424,38 @@ export default function Dashboard() {
                     )}
                   </div>
                 )}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-8 space-x-2">
+                    <button
+                      onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                      disabled={page === 1}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <span className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={page === totalPages}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {successMessage && (
+                  <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
               </>
             )}
           </div>
