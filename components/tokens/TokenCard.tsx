@@ -18,6 +18,7 @@ import Modal from '../ui/Modal';
 import type { ChartData, ScriptableContext } from 'chart.js';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import TokenReactions from './TokenReactions';
 
 // Register Chart.js plugins
 ChartJS.register(
@@ -513,6 +514,11 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
               {formatLargeNumber(token.metadata.volume_24h)}
             </p>
           </div>
+        </div>
+
+        {/* Add reactions before the address section */}
+        <div className="mb-4">
+          <TokenReactions tokenAddress={token.contractAddress} />
         </div>
 
         {/* Address Section - Now part of the main content flow */}

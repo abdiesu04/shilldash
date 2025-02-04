@@ -91,29 +91,26 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const reactionSchema = new mongoose.Schema({
-  tokenAddress: { 
-    type: String, 
+const ReactionSchema = new mongoose.Schema({
+  tokenAddress: {
+    type: String,
     required: true,
-    index: true,
+    index: true
   },
-  clerkUserId: { 
-    type: String, 
+  userId: {
+    type: String,
     required: true,
-    index: true,
+    index: true
   },
-  reactionType: { 
-    type: String, 
-    required: true,
-    index: true,
+  type: {
+    type: String,
+    enum: ['rocket', 'poop'],
+    required: true
   },
-  timestamp: { 
-    type: Date, 
-    default: Date.now,
-    index: true,
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true
 });
 
 // Compound indexes for common query patterns
@@ -127,11 +124,9 @@ userSchema.index({ clerkUserId: 1, 'savedTokens': 1 });
 userSchema.index({ clerkUserId: 1, 'addedTokens': 1 });
 userSchema.index({ email: 1, clerkUserId: 1 });
 
-reactionSchema.index({ tokenAddress: 1, reactionType: 1 });
-reactionSchema.index({ clerkUserId: 1, timestamp: -1 });
-reactionSchema.index({ tokenAddress: 1, timestamp: -1 });
+ReactionSchema.index({ tokenAddress: 1, userId: 1 }, { unique: true });
 
 // Create models
 export const Token = mongoose.models.Token || mongoose.model('Token', tokenSchema);
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
-export const Reaction = mongoose.models.Reaction || mongoose.model('Reaction', reactionSchema); 
+export const Reaction = mongoose.models.Reaction || mongoose.model('Reaction', ReactionSchema); 
