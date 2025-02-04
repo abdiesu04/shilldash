@@ -53,10 +53,12 @@ interface Token {
   lastUpdated?: Date;
 }
 
+type TimeframeType = '24h' | '7d';
+
 export default function TrendingTokens() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState('24h');
+  const [timeframe, setTimeframe] = useState<TimeframeType>('24h');
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
 
   useEffect(() => {
