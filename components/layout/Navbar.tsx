@@ -289,14 +289,12 @@ const Navbar = () => {
       )}
 
       {/* Sign In Dialog */}
-      {showSignInDialog && (
-        <SignInDialog
-          isOpen={showSignInDialog}
-          onClose={() => setShowSignInDialog(false)}
-          title={signInMessage.title}
-          message={signInMessage.message}
-        />
-      )}
+      <SignInDialog
+        isOpen={showSignInDialog}
+        onClose={() => setShowSignInDialog(false)}
+        title={signInMessage.title}
+        message={signInMessage.message}
+      />
     </nav>
   );
 };

@@ -108,10 +108,18 @@ export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
 
       if (!saveResponse.ok) {
         const errorData = await saveResponse.json();
+        if (errorData.message?.includes('already exists')) {
+          throw new Error('You have already added this token to your dashboard');
+        }
         throw new Error(errorData.error || 'Failed to save token');
       }
 
       const savedToken = await saveResponse.json();
+      if (savedToken.message?.includes('updated successfully')) {
+        setError('You have already added this token to your dashboard');
+        return;
+      }
+      
       onSuccess(savedToken);
       reset();
     } catch (error) {

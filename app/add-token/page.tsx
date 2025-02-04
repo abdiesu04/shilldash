@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import AddTokenForm from '@/components/tokens/AddTokenForm';
@@ -17,6 +16,7 @@ export default function AddTokenPage() {
   if (!isSignedIn) {
     return (
       <SignInDialog
+        isOpen={true}
         title="Sign In to Add Tokens"
         message="Please sign in to start adding and tracking your tokens"
         onClose={() => router.push('/')}
@@ -40,7 +40,7 @@ export default function AddTokenPage() {
         {/* Main Content */}
         <div className="bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-[#03E1FF]/10 p-6 md:p-8 backdrop-blur-xl">
           <div className="max-w-2xl mx-auto">
-            <AddTokenForm />
+            <AddTokenForm onSuccess={() => router.push('/dashboard')} />
           </div>
         </div>
 
