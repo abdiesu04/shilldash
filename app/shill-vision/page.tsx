@@ -137,7 +137,7 @@ export default function ShillVisionPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Graduated
               <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-                (>100M MCap)
+                ({'>'}100M MCap)
               </span>
             </h2>
           </div>
