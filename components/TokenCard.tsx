@@ -33,12 +33,25 @@ interface TokenCardProps {
     onChainData: {
       supply: string;
       decimals: number;
+      mintAuthority?: string | null;
+      freezeAuthority?: string | null;
+      isInitialized?: boolean;
     };
     urls: {
       explorers: {
         solscan: string;
+        solanaFM?: string;
+        explorer?: string;
+      };
+      trading?: {
+        raydium?: string;
+        jupiter?: string;
+        orca?: string;
       };
     };
+    description?: string;
+    clerkUserId?: string;
+    lastUpdated?: Date;
   };
   showReactions?: boolean;
   onDelete?: () => void;
