@@ -45,7 +45,7 @@ export default function TrendingTokens() {
   };
 
   const handleTokenClick = (token: Token) => {
-    setSelectedToken(token);
+    // No-op
   };
 
   return (
