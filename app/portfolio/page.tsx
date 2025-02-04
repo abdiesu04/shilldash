@@ -51,6 +51,7 @@ export default function PortfolioPage() {
   if (!isSignedIn) {
     return (
       <SignInDialog
+        isOpen={true}
         title="Access Your Portfolio"
         message="Sign in to view and manage your token portfolio"
         onClose={() => router.push('/')}
