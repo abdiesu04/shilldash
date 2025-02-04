@@ -3,19 +3,16 @@ import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
 import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
-interface RouteContext {
-  params: {
-    address: string;
-  };
-}
-
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { address: string } }
+) {
   try {
     // Connect to database
     await connectToDatabase();
 
     // Simplify address retrieval
-    const address = context.params.address;
+    const address = params.address;
     
     if (!address) {
       return NextResponse.json(
@@ -46,11 +43,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { address: string } }
+) {
   try {
     await connectToDatabase();
     
-    const address = context.params.address;
+    const address = params.address;
     
     if (!address) {
       return NextResponse.json(
