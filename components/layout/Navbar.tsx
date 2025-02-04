@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth, SignInButton } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, Rocket, BarChart2, Wallet, Home, LineChart, Star, Settings, Sun, Moon, AlertTriangle, LogIn, Twitter, Eye } from 'lucide-react';
+import { Menu, X, Rocket, BarChart2, Wallet, LineChart, Star, Sun, Moon, LogIn, Eye, Twitter } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import AddTokenForm from '../tokens/AddTokenForm';
 import SignInDialog from '../ui/SignInDialog';
@@ -24,26 +24,17 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMenuOptionsOpen, setIsMenuOptionsOpen] = useState(false);
   const [showAddToken, setShowAddToken] = useState(false);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
   const [signInMessage, setSignInMessage] = useState({ title: '', message: '' });
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
   const { userId, isLoaded, isSignedIn } = useAuth();
-  const [authError, setAuthError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Reset auth error when auth state changes
-  useEffect(() => {
-    if (isLoaded) {
-      setAuthError(null);
-    }
-  }, [isLoaded, isSignedIn]);
 
   const handleProtectedAction = (action: string) => {
     if (!isSignedIn) {
@@ -86,7 +77,7 @@ const Navbar = () => {
           break;
       }
     }
-    setIsMenuOptionsOpen(false);
+    setIsMenuOpen(false);
   };
 
   // Handle scroll effect
@@ -97,8 +88,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const isActive = (path: string) => pathname === path;
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${

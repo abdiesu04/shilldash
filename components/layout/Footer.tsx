@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Twitter, MessageSquare, ExternalLink } from 'lucide-react';
+import { Github, Twitter, MessageSquare } from 'lucide-react';
 
 export default function Footer() {
   return (
