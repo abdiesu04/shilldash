@@ -3,15 +3,9 @@ import { connectToDatabase } from '@/utils/mongodb';
 import { Token } from '@/models';
 import { fetchTokenData } from '@/utils/solanaTokenUtils';
 
-type Props = {
-  params: {
-    address: string;
-  };
-};
-
 export async function GET(
   request: NextRequest,
-  context: Props
+  context: { params: { address: string } }
 ) {
   try {
     // Connect to database
@@ -51,7 +45,7 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  context: Props
+  context: { params: { address: string } }
 ) {
   try {
     await connectToDatabase();
