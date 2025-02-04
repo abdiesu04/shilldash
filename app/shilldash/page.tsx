@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, TrendingUp, Award, Sparkles } from 'lucide-react';
-import TokenCard from '@/components/tokens/TokenCard';
+import TokenCard from '@/components/TokenCard';
 
 interface Token {
   contractAddress: string;
