@@ -161,9 +161,19 @@ export default function Dashboard() {
     token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleAddTokenClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isSignedIn) {
+      setError('Please sign in to add tokens');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    setShowAddToken(true);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0F1F] py-12">
+      <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="relative">
@@ -178,7 +188,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0A0F1F] py-12">
+      <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h3 className="text-lg font-medium text-red-500">
@@ -191,164 +201,184 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0A0F1F]">
-      <div className="container mx-auto px-4 pt-24 pb-8">
-        {/* Header Section with Premium Styling */}
-        <div className="relative mb-8 z-20">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3]/5 via-[#03E1FF]/5 to-[#DC1FFF]/5 blur-3xl" />
-          <div className="relative">
-            <div className="flex items-center justify-between space-x-6">
-              {/* Title Section */}
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] bg-clip-text text-transparent">
-                  Token Dashboard
-                </h1>
-              </div>
+    <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24 pb-16">
+      {/* Show error message if exists */}
+      {error && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+            <AlertTriangle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
 
-              {/* Search Bar - Centered */}
-              <div className="flex-grow max-w-xl relative">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-[#03E1FF]" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-11 pr-10 py-2.5 border border-[#03E1FF]/20 rounded-xl bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-                    placeholder="Search tokens by name or symbol..."
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors duration-300"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-              </div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        {/* Header Section - All elements in one line */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8">
+          {/* Title */}
+          <div className="flex-shrink-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track and manage your tokens</p>
+          </div>
 
-              {/* View Mode Buttons */}
-              <div className="flex-shrink-0">
-                <div className="flex items-center bg-white dark:bg-white/5 rounded-xl p-1 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/20">
-                  {viewModes.map((mode) => (
-                    <button
-                      key={mode.value}
-                      onClick={() => setViewMode(mode.value)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                        viewMode === mode.value
-                          ? 'bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 text-gray-900 dark:text-white shadow-[0_0_20px_-12px_rgba(0,255,163,0.5)]'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {mode.label}
-                    </button>
-                  ))}
-                </div>
+          {/* Search and View Mode Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 flex-1 lg:ml-8">
+            {/* Search Bar */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
+              <input
+                type="text"
+                placeholder="Search tokens by name or symbol..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-[#03E1FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-200"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* View Mode Selector */}
+            <div className="flex bg-gray-100 dark:bg-white/5 rounded-lg p-1 shadow-inner">
+              {viewModes.map((mode) => (
+                <button
+                  key={mode.value}
+                  onClick={() => setViewMode(mode.value)}
+                  className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    viewMode === mode.value
+                      ? 'bg-white dark:bg-[#03E1FF]/20 text-[#03E1FF] shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Main Content Layout */}
-        <div className="grid grid-cols-12 gap-6 relative z-10">
-          {/* Trending Tokens Section - Sticky on Desktop */}
-          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-32 lg:self-start lg:h-[calc(100vh-8rem)] overflow-y-auto">
-            <TrendingTokens />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mb-12">
+          {/* Trending Tokens Section */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24">
+            <div className="overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0">
+              <div className="min-w-[min-content] lg:min-w-0">
+                <TrendingTokens />
+              </div>
+            </div>
           </div>
 
-          {/* Token Grid with Premium Layout */}
-          <div className="col-span-12 lg:col-span-9 relative">
+          {/* Token Grid */}
+          <div className="lg:col-span-9">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr">
                 {[...Array(9)].map((_, i) => (
                   <div
                     key={i}
-                    className="bg-white dark:bg-white/5 rounded-xl h-[300px] backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10"
+                    className="bg-gray-100 dark:bg-white/5 rounded-xl h-[280px] backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10 transform hover:scale-[1.02] transition-all duration-300 hover:shadow-lg dark:hover:shadow-[#03E1FF]/10"
                   />
                 ))}
               </div>
             ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <div className="text-center py-8">
+                <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500">{error}</p>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr">
                   {/* Add Token Card */}
                   <Link
-                    href="/add-token"
-                    className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gradient-to-br dark:from-[#0C0F1F] dark:to-[#151933] rounded-xl border border-gray-200 dark:border-[#03E1FF]/20 hover:border-[#03E1FF] dark:hover:border-[#03E1FF]/40 transition-all duration-300 transform hover:scale-[1.02] group shadow-sm hover:shadow-lg"
+                    href="#"
+                    onClick={handleAddTokenClick}
+                    className={`group relative flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br ${
+                      isSignedIn 
+                        ? 'from-gray-50 to-white dark:from-[#03E1FF]/5 dark:to-[#00FFA3]/5 hover:border-[#03E1FF] dark:hover:border-[#03E1FF]/40 hover:shadow-lg dark:hover:shadow-[#03E1FF]/10'
+                        : 'from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-900/50 cursor-not-allowed'
+                    } rounded-xl border-2 border-dashed border-gray-300 dark:border-[#03E1FF]/20 transition-all duration-300 h-full min-h-[280px]`}
                   >
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] p-[2px] mb-4">
-                      <div className="h-full w-full rounded-full bg-white dark:bg-[#0C0F1F] flex items-center justify-center group-hover:bg-transparent transition-all duration-300">
-                        <Plus className="h-6 w-6 text-[#03E1FF] group-hover:text-white" />
-                      </div>
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full ${
+                      isSignedIn 
+                        ? 'bg-gray-100 dark:bg-[#03E1FF]/10 group-hover:scale-110'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    } flex items-center justify-center mb-4 transition-transform duration-300`}>
+                      <Plus className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                        isSignedIn 
+                          ? 'text-[#03E1FF]'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`} />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-[#03E1FF] transition-colors duration-300">
-                      Add Token
+                    <h3 className={`text-base sm:text-lg font-semibold mb-2 ${
+                      isSignedIn 
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {isSignedIn ? 'Add Token' : 'Sign In Required'}
                     </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track a new token</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                      {isSignedIn 
+                        ? 'Add your token to start tracking its performance'
+                        : 'Please sign in to add and track tokens'}
+                    </p>
                   </Link>
 
-                  {/* Existing Token Cards */}
-                  {filteredTokens.length === 0 && viewMode === 'my-tokens' ? (
-                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-6">
-                        <Inbox className="w-10 h-10 text-[#03E1FF]" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        No Tokens Added Yet
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-                        Start by adding your first token. You can track and manage all your tokens from here.
-                      </p>
+                  {/* Token Cards */}
+                  {filteredTokens.map((token) => (
+                    <div 
+                      key={token.contractAddress} 
+                      className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[#03E1FF]/10"
+                    >
+                      <TokenCard
+                        token={token}
+                        onDelete={handleDeleteToken}
+                        showDeleteButton={viewMode === 'my-tokens'}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Empty State */}
+                {filteredTokens.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-[#03E1FF]/20">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-4 sm:mb-6">
+                      {viewMode === 'my-tokens' ? (
+                        <Inbox className="w-8 h-8 sm:w-10 sm:h-10 text-[#03E1FF]" />
+                      ) : (
+                        <Search className="w-8 h-8 sm:w-10 sm:h-10 text-[#03E1FF]" />
+                      )}
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+                      {viewMode === 'my-tokens' ? 'No Tokens Added Yet' : 'No Results Found'}
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+                      {viewMode === 'my-tokens'
+                        ? 'Start by adding your first token. You can track and manage all your tokens from here.'
+                        : `No tokens found matching "${searchQuery}"`}
+                    </p>
+                    {viewMode === 'my-tokens' && (
                       <button
                         onClick={() => setShowAddToken(true)}
-                        className="px-6 py-3 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg text-white font-medium hover:opacity-90 transition-opacity duration-300"
+                        className="px-6 py-3 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity duration-300 hover:shadow-lg"
                       >
                         Add Your First Token
                       </button>
-                    </div>
-                  ) : filteredTokens.length === 0 && searchQuery ? (
-                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFA3]/10 via-[#03E1FF]/10 to-[#DC1FFF]/10 flex items-center justify-center mb-6">
-                        <Search className="w-10 h-10 text-[#03E1FF]" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        No Results Found
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
-                        No tokens found matching "{searchQuery}"
-                      </p>
-                    </div>
-                  ) : (
-                    filteredTokens.map((token, index) => (
-                      <div
-                        key={token.contractAddress}
-                        className="transform transition-all duration-500 hover:z-10"
-                        style={{
-                          animationDelay: `${(index + 1) * 100}ms`,
-                        }}
-                      >
-                        <TokenCard
-                          token={token}
-                          onDelete={handleDeleteToken}
-                          showDeleteButton={viewMode === 'my-tokens'}
-                        />
-                      </div>
-                    ))
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Add Token Modal */}
+      {/* Modals */}
       <Modal
         isOpen={showAddToken}
         onClose={() => setShowAddToken(false)}

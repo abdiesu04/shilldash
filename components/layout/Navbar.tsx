@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth, SignInButton } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, Rocket, BarChart2, Wallet, Home, LineChart, Star, Settings, Sun, Moon, AlertTriangle, LogIn, Twitter } from 'lucide-react';
+import { Menu, X, ChevronDown, Rocket, BarChart2, Wallet, Home, LineChart, Star, Settings, Sun, Moon, AlertTriangle, LogIn, Twitter, Eye } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import AddTokenForm from '../tokens/AddTokenForm';
 import SignInDialog from '../ui/SignInDialog';
 
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: BarChart2 },
-  { id: 'shilldash', name: 'ShillDash', href: '/shilldash', icon: Rocket },
+  { id: 'shilldash', name: 'Shill Vision', href: '/shilldash', icon: Eye },
   { id: 'portfolio', name: 'Portfolio', href: '/portfolio', icon: Wallet },
 ];
 
