@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth, SignInButton } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, Rocket, BarChart2, Wallet, Home, LineChart, Star, Settings, Sun, Moon, AlertTriangle, LogIn } from 'lucide-react';
+import { Menu, X, ChevronDown, Rocket, BarChart2, Wallet, Home, LineChart, Star, Settings, Sun, Moon, AlertTriangle, LogIn, Twitter } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import AddTokenForm from '../tokens/AddTokenForm';
 import SignInDialog from '../ui/SignInDialog';
@@ -136,6 +136,17 @@ const Navbar = () => {
                 </Link>
               );
             })}
+
+            {/* Join Community Link */}
+            <a
+              href="https://x.com/ShillDash?t=a5ZuRAONXjXzMt5t5EBc5g&s=35"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+            >
+              <Twitter className="w-4 h-4" />
+              <span>Join Community</span>
+            </a>
 
             {/* Theme Toggle */}
             <button

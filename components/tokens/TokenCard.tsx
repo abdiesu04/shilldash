@@ -395,9 +395,22 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Get the clicked element
+    const target = e.target as HTMLElement;
+    
+    // Check if the click is on the chart, logo, name, or their containers
+    const isChartClick = target.closest('.chart-section') !== null;
+    const isHeaderClick = target.closest('.token-header') !== null;
+    
+    if (isChartClick || isHeaderClick) {
+      setShowDetails(true);
+    }
+  };
+
   return (
     <div
-      onClick={() => setShowDetails(true)}
+      onClick={handleCardClick}
       className="group relative w-full bg-white dark:bg-[#0A0F1F] rounded-lg border border-gray-200 dark:border-[#03E1FF]/10 hover:border-[#03E1FF]/30 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
     >
       {/* Decorative Edges */}
@@ -409,7 +422,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
       {/* Main Content Container */}
       <div className="flex flex-col h-full">
         {/* Token Header */}
-        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800 token-header">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-2.5 max-w-[70%]">
               <div className="relative flex-shrink-0">
@@ -470,7 +483,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Chart Section */}
-        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800 chart-section">
           <div className="relative h-[50px]">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1F]/20" />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -485,7 +498,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Stats Grid */}
-        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800">
+        <div className="p-2.5 border-b border-gray-100 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 gap-1.5">
             <div className="p-1.5 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
               <p className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Market Cap</p>
@@ -503,7 +516,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton }: TokenCa
         </div>
 
         {/* Footer with Address and Actions */}
-        <div className="p-2.5 mt-auto">
+        <div className="p-2.5 mt-auto" onClick={(e) => e.stopPropagation()}>
           {/* Contract Address */}
           <div className="flex items-center justify-between mb-1.5 p-1 rounded-lg bg-gray-50 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-[#03E1FF]/10">
             <div className="flex items-center space-x-1.5 min-w-0 flex-1">

@@ -29,10 +29,11 @@ export default function Footer() {
                 <Github className="w-5 h-5" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/ShillDash?t=a5ZuRAONXjXzMt5t5EBc5g&s=35"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-all duration-300"
+                title="Join our Community"
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -64,6 +65,20 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <a
+                  href="https://x.com/ShillDash?t=a5ZuRAONXjXzMt5t5EBc5g&s=35"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-300 flex items-center group"
+                >
+                  <span className="relative flex items-center space-x-2">
+                    <Twitter className="w-4 h-4" />
+                    <span>Join Community</span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-[#00FFA3] to-[#03E1FF] transition-all duration-300 group-hover:w-full" />
+                  </span>
+                </a>
+              </li>
             </ul>
           </div>
 
