@@ -196,7 +196,7 @@ export default function ShillDashPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <TokenCard token={token} showReactions={false} show24hChange={false} />
+                        <TokenCard token={token} showReactions={false} show24hChange={false} isClickable={false} />
                       </motion.div>
                     ))}
                   </div>
