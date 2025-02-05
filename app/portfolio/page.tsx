@@ -1,8 +1,5 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import SignInDialog from '@/components/ui/SignInDialog';
 import { Wallet2, ArrowRightLeft, LineChart, Gem, LucideIcon } from 'lucide-react';
 import ComingSoonModal from '@/components/portfolio/ComingSoonModal';
 
@@ -41,24 +38,6 @@ const features: FeatureCard[] = [
 ];
 
 export default function PortfolioPage() {
-  const router = useRouter();
-  const { isLoaded, isSignedIn } = useAuth();
-
-  if (!isLoaded) {
-    return null;
-  }
-
-  if (!isSignedIn) {
-    return (
-      <SignInDialog
-        isOpen={true}
-        title="Access Your Portfolio"
-        message="Sign in to view and manage your token portfolio"
-        onClose={() => router.push('/')}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       {/* Hero Section */}
@@ -73,7 +52,7 @@ export default function PortfolioPage() {
 
       {/* Feature Grid */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {features.map((feature, index) => (
+        {features.map((feature) => (
           <div
             key={feature.title}
             className="group relative p-6 rounded-2xl border border-gray-200 dark:border-[#03E1FF]/10 bg-white dark:bg-[#0A0F1F] hover:border-[#03E1FF]/30 transition-all duration-300"
@@ -107,4 +86,4 @@ export default function PortfolioPage() {
       </div>
     </div>
   );
-} 
+}
