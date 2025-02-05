@@ -5,12 +5,15 @@ import type { NextRequest } from "next/server";
 // Define public routes that don't require authentication
 const publicPaths = [
   "/",
+  "/dashboard",
+  "/portfolio",
   "/api/tokens/list",
   "/api/tokens/[address]",
   "/shilldash",
   "/api/shill-vision",
   "/sign-in",
   "/sign-up",
+
   "/api/tokens/trending",
   "/api/tokens/validate",
   "/api/tokens/[address]/reaction",
