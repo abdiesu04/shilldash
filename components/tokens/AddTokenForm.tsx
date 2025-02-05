@@ -87,7 +87,7 @@ export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
       if (!response.ok) {
         if (response.status === 409 || result.message?.toLowerCase().includes('already exists')) {
           setIsTokenExists(true);
-          setError('This token has already been added to your dashboard.');
+          setError('Token already added');
         } else {
           throw new Error(result.message || 'Failed to add token');
         }
@@ -118,7 +118,7 @@ export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
               </p>
               {isTokenExists && (
                 <p className="text-sm text-blue-600 dark:text-blue-300 mt-2">
-                  You can view this token in your dashboard.
+                  View in dashboard
                 </p>
               )}
             </div>
