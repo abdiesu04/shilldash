@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Twitter, MessageSquare } from 'lucide-react';
+import { Github, Twitter, Send } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -38,12 +38,12 @@ export default function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="https://discord.com"
+                href="https://t.me/+1tRL0DsuhHtiNDQ0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-all duration-300"
               >
-                <MessageSquare className="w-5 h-5" />
+                <Send className="w-5 h-5" />
               </a>
             </div>
           </div>
