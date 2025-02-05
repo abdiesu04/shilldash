@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Loader2 } from 'lucide-react';
-import { isValidSolanaAddress } from '@/utils/solanaTokenUtils';
+import { z } from 'zod';
+import { AlertCircle } from 'lucide-react';
 
 interface Token {
   contractAddress: string;
@@ -55,139 +54,113 @@ interface AddTokenFormProps {
   onSuccess: (token: Token) => void;
 }
 
-const tokenSchema = z.object({
-  address: z.string().refine((val) => isValidSolanaAddress(val), {
-    message: 'Invalid Solana token address',
-  }),
-  description: z.string().optional()
+const schema = z.object({
+  contractAddress: z.string().min(1, 'Contract address is required'),
+  description: z.string().optional(),
 });
 
-type FormData = z.infer<typeof tokenSchema>;
+type FormData = z.infer<typeof schema>;
 
 export default function AddTokenForm({ onSuccess }: AddTokenFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(tokenSchema),
+  const [isTokenExists, setIsTokenExists] = useState(false);
+  
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
-    try {
-      setIsSubmitting(true);
-      setError('');
+    setIsLoading(true);
+    setError('');
+    setIsTokenExists(false);
 
-      // Fetch token data using the address
-      const response = await fetch(`/api/tokens/${data.address}`, {
-        method: 'GET',
+    try {
+      const response = await fetch('/api/tokens/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
+
+      const result = await response.json();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch token data');
-      }
-
-      const tokenData = await response.json();
-
-      // Save token to database
-      const saveResponse = await fetch('/api/tokens/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...tokenData,
-          description: data.description
-        }),
-      });
-
-      if (!saveResponse.ok) {
-        const errorData = await saveResponse.json();
-        if (errorData.message?.includes('already exists')) {
-          throw new Error('You have already added this token to your dashboard');
+        if (response.status === 409 || result.message?.toLowerCase().includes('already exists')) {
+          setIsTokenExists(true);
+          setError('This token has already been added to your dashboard.');
+        } else {
+          throw new Error(result.message || 'Failed to add token');
         }
-        throw new Error(errorData.error || 'Failed to save token');
-      }
-
-      const savedToken = await saveResponse.json();
-      if (savedToken.message?.includes('updated successfully')) {
-        setError('You have already added this token to your dashboard');
         return;
       }
-      
-      onSuccess(savedToken);
+
       reset();
-    } catch (error) {
-      console.error('Error adding token:', error);
-      setError(error instanceof Error ? error.message : 'Failed to add token');
+      onSuccess(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add token');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {error && (
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-          {error}
+        <div className={`p-4 rounded-lg ${isTokenExists ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}`}>
+          <div className="flex items-start space-x-3">
+            <AlertCircle className={`w-5 h-5 ${isTokenExists ? 'text-blue-500 dark:text-blue-400' : 'text-red-500 dark:text-red-400'} flex-shrink-0 mt-0.5`} />
+            <div>
+              <h4 className={`text-sm font-medium ${isTokenExists ? 'text-blue-800 dark:text-blue-200' : 'text-red-800 dark:text-red-200'}`}>
+                {isTokenExists ? 'Token Already Added' : 'Error'}
+              </h4>
+              <p className={`text-sm ${isTokenExists ? 'text-blue-600 dark:text-blue-300' : 'text-red-600 dark:text-red-300'} mt-1`}>
+                {error}
+              </p>
+              {isTokenExists && (
+                <p className="text-sm text-blue-600 dark:text-blue-300 mt-2">
+                  You can view this token in your dashboard.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-200 mb-1">
-            Solana Token Address
-          </label>
-          <input
-            {...register('address')}
-            type="text"
-            id="address"
-            placeholder="Enter Solana token address (e.g., EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)"
-            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300 font-mono"
-          />
-          {errors.address && (
-            <p className="mt-1 text-sm text-red-500">{errors.address.message}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-400">
-            Enter a valid Solana token address to automatically fetch token data
+      <div>
+        <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Contract Address
+        </label>
+        <input
+          {...register('contractAddress')}
+          type="text"
+          className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-[#03E1FF] focus:border-[#03E1FF] sm:text-sm"
+          placeholder="Enter token contract address"
+        />
+        {errors.contractAddress && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            {errors.contractAddress.message}
           </p>
-        </div>
+        )}
+      </div>
 
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-200 mb-1">
-            Description (Optional)
-          </label>
-          <textarea
-            {...register('description')}
-            id="description"
-            rows={3}
-            placeholder="Enter token description"
-            className="w-full px-4 py-2.5 bg-white/5 border border-[#03E1FF]/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#03E1FF]/50 transition-all duration-300"
-          />
-        </div>
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Description (Optional)
+        </label>
+        <textarea
+          {...register('description')}
+          rows={3}
+          className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-[#03E1FF] focus:border-[#03E1FF] sm:text-sm"
+          placeholder="Add a description for this token"
+        />
       </div>
 
       <button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full relative flex items-center justify-center px-6 py-3 text-sm font-medium text-white rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+        disabled={isLoading}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#00FFA3] to-[#03E1FF] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#03E1FF] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] via-[#03E1FF] to-[#DC1FFF] opacity-100 group-hover:opacity-90 transition-opacity duration-300" />
-        <span className="relative flex items-center">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Adding Token...
-            </>
-          ) : (
-            'Add Token'
-          )}
-        </span>
+        {isLoading ? 'Adding Token...' : 'Add Token'}
       </button>
     </form>
   );
