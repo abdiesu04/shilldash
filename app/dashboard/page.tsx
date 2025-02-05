@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import TokenCard from '@/components/tokens/TokenCard';
 import TrendingTokens from '@/components/tokens/TrendingTokens';
 import Link from 'next/link';
@@ -31,7 +31,8 @@ const viewModes = [
   { value: 'saved', label: 'Saved' }
 ];
 
-export default function Dashboard() {
+// Create a new client component for the search params
+function DashboardContent() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -503,5 +504,25 @@ export default function Dashboard() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+// Main dashboard component with Suspense
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white dark:bg-[#0A0F1F] pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-full border-2 border-[#03E1FF] border-t-transparent animate-spin" />
+              <div className="absolute inset-0 bg-[#03E1FF] rounded-full animate-pulse opacity-20" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 } 
