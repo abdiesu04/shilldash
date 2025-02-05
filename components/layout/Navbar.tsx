@@ -97,7 +97,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/dashboard" className="flex items-center space-x-2">
               <Rocket className="w-8 h-8 text-[#03E1FF]" />
               <span className="text-xl font-bold bg-gradient-to-r from-[#03E1FF] to-[#00FFA3] text-transparent bg-clip-text">
                 ShillDash

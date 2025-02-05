@@ -30,16 +30,16 @@ interface TokenCardProps {
       labels: string[];
       prices: number[];
     };
-    onChainData: {
+    onChainData?: {
       supply: string;
       decimals: number;
       mintAuthority?: string | null;
       freezeAuthority?: string | null;
       isInitialized?: boolean;
     };
-    urls: {
-      explorers: {
-        solscan: string;
+    urls?: {
+      explorers?: {
+        solscan?: string;
         solanaFM?: string;
         explorer?: string;
       };
@@ -56,13 +56,21 @@ interface TokenCardProps {
   showReactions?: boolean;
   onDelete?: () => void;
   showDeleteButton?: boolean;
+  show24hChange?: boolean;
 }
 
-export default function TokenCard({ token, onDelete, showDeleteButton, showReactions = true }: TokenCardProps) {
+export default function TokenCard({ token, showReactions = true, show24hChange = true }: TokenCardProps) {
   const priceChange = Number(token.metadata.price_change_24h.h24);
   const volume = Number(token.metadata.volume_24h.h24);
-
   const priceChangeColor = priceChange >= 0 ? 'text-green-600' : 'text-red-600';
+
+  // Default Solscan URL using contract address
+  const solscanUrl = token.urls?.explorers?.solscan || `https://solscan.io/token/${token.contractAddress}`;
+  
+  // Safely calculate supply with fallback
+  const formattedSupply = token.onChainData?.supply && token.onChainData?.decimals
+    ? formatNumber(parseFloat(token.onChainData.supply) / Math.pow(10, token.onChainData.decimals))
+    : 'N/A';
 
   return (
     <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
@@ -92,12 +100,14 @@ export default function TokenCard({ token, onDelete, showDeleteButton, showReact
               </span>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400">24h Change</span>
-              <span className={`font-medium ${priceChangeColor}`}>
-                {formatPercentage(priceChange)}%
-              </span>
-            </div>
+            {show24hChange && (
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500 dark:text-gray-400">24h Change</span>
+                <span className={`font-medium ${priceChangeColor}`}>
+                  {formatPercentage(priceChange)}%
+                </span>
+              </div>
+            )}
 
             <div className="flex justify-between">
               <span className="text-sm text-gray-500 dark:text-gray-400">Market Cap</span>
@@ -122,7 +132,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton, showReact
 
             <div className="pt-2 flex justify-between items-center">
               <a
-                href={token.urls.explorers.solscan}
+                href={solscanUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -131,7 +141,7 @@ export default function TokenCard({ token, onDelete, showDeleteButton, showReact
                 View on Solscan ↗
               </a>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Supply: {formatNumber(parseFloat(token.onChainData.supply) / Math.pow(10, token.onChainData.decimals))}
+                Supply: {formattedSupply}
               </span>
             </div>
           </div>

@@ -11,12 +11,21 @@ const publicPaths = [
   "/api/shill-vision",
   "/sign-in",
   "/sign-up",
+  "/api/tokens/trending",
+  "/api/tokens/validate",
+  "/api/tokens/[address]/reaction",
+  "/api/tokens/[address]/save",
+  "/tokens/[address]"
 ];
 
 // Define routes that should be completely ignored by Clerk
 const ignoredPaths = [
   "/api/webhooks/clerk",
-  "/api/users"
+  "/api/users",
+  "/_next",
+  "/favicon.ico",
+  "/images",
+  "/assets"
 ];
 
 const isPublic = (path: string) => {

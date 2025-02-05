@@ -31,16 +31,16 @@ interface Token {
     labels: string[];
     prices: number[];
   };
-  onChainData: {
+  onChainData?: {
     supply: string;
     decimals: number;
     mintAuthority?: string | null;
     freezeAuthority?: string | null;
     isInitialized?: boolean;
   };
-  urls: {
-    explorers: {
-      solscan: string;
+  urls?: {
+    explorers?: {
+      solscan?: string;
       solanaFM?: string;
       explorer?: string;
     };
@@ -196,7 +196,7 @@ export default function ShillDashPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <TokenCard token={token} showReactions={false} />
+                        <TokenCard token={token} showReactions={false} show24hChange={false} />
                       </motion.div>
                     ))}
                   </div>

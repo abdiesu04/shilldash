@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Sparkles, TrendingUp, TrendingDown } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import Modal from '../ui/Modal';
 import TokenDetails from './TokenDetails';
 
@@ -79,10 +79,6 @@ export default function TrendingTokens() {
     }
   };
 
-  const handleTokenClick = (token: Token) => {
-    setSelectedToken(token);
-  };
-
   return (
     <div className="bg-white/5 rounded-xl border border-[#03E1FF]/20">
       {/* Header Section */}
@@ -125,10 +121,9 @@ export default function TrendingTokens() {
               ))
             ) : (
               tokens.map((token) => (
-                <button
+                <div
                   key={`${token.id}-${token.contractAddress}`}
-                  onClick={() => handleTokenClick(token)}
-                  className="w-full flex items-center space-x-3 p-2 sm:p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300"
+                  className="w-full flex items-center space-x-3 p-2 sm:p-3 bg-white/5 rounded-lg"
                 >
                   <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 overflow-hidden">
                     <Image
@@ -151,21 +146,7 @@ export default function TrendingTokens() {
                       ${token.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg ${
-                    Number(token.metadata.price_change_24h.h24) >= 0
-                      ? 'text-green-400 bg-green-400/10'
-                      : 'text-red-400 bg-red-400/10'
-                  }`}>
-                    {Number(token.metadata.price_change_24h.h24) >= 0 ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    <span className="text-xs font-medium">
-                      {Math.abs(Number(token.metadata.price_change_24h.h24)).toFixed(2)}%
-                    </span>
-                  </div>
-                </button>
+                </div>
               ))
             )}
           </div>
